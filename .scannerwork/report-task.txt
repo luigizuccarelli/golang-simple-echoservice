@@ -1,0 +1,6 @@
+projectKey=portfoliotracker-middlewareinterface
+serverUrl=http://localhost:9009
+serverVersion=7.7.0.23042
+dashboardUrl=http://localhost:9009/dashboard?id=portfoliotracker-middlewareinterface
+ceTaskId=AWpou0w4CymPbuYrZC7P
+ceTaskUrl=http://localhost:9009/api/ce/task?id=AWpou0w4CymPbuYrZC7P

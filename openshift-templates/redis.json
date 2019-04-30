@@ -1,0 +1,115 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "redis-service",
+    "annotations": {
+      "description": "ACE Demo POC",
+      "tags": "ace,poc,redis,cache",
+      "iconClass": "icon-redis"
+    }
+  },
+  "parameters": [
+    {
+      "name": "ACE_REDIS_IMAGE",
+      "value": "docker.io/centos/redis-32-centos7",
+      "description": "The name of the redis image",
+      "required": true
+    },
+    {
+      "name": "ACE_REDIS_IMAGE_VERSION",
+      "value": "latest",
+      "description": "The version for the redis image",
+      "required": true
+    }
+  ],
+  "objects": [
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "ace-redis",
+        "labels": {
+          "name": "ace-redis"
+        }
+      },
+      "spec": {
+        "selector": {
+          "name": "ace-redis"
+        },
+        "ports": [
+          {
+            "name": "redis-port",
+            "port": 6379,
+            "targetPort": 6379,
+            "protocol" : "TCP"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "ace-redis",
+        "labels": {
+          "name": "ace-redis"
+        }
+      },
+      "spec": {
+        "triggers": [
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "name": "ace-redis"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "ace-redis"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "ace-redis",
+                "image": "${ACE_REDIS_IMAGE}:${ACE_REDIS_IMAGE_VERSION}",
+                "ports": [
+                  {
+                    "containerPort": 6379
+                  }
+                ],
+                "readinessProbe": {
+                  "exec": {
+                    "command": [
+                      "/bin/sh",
+                      "-i",
+                      "-c",
+                      "test \"$(redis-cli -h 127.0.0.1 ping)\" == \"PONG\""
+                    ]
+                  },
+                  "initialDelaySeconds": 5,
+                  "timeoutSeconds": 1
+                },
+                "imagePullPolicy": "Always",
+                "resources": {
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "500Mi"
+                  },
+                  "requests": {
+                    "cpu": "10m",
+                    "memory": "250Mi"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

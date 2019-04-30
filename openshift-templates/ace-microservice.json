@@ -1,0 +1,137 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "ace-microservice",
+    "annotations": {
+      "description": "ACE Demo POC",
+      "tags": "ace,poc,golang",
+      "iconClass": "icon-golang"
+    }
+  },
+  "parameters": [
+    {
+      "name": "ACE_GOLANG_IMAGE",
+      "value": "docker.io/lzuccarelli/ace-golang",
+      "description": "The name of the golang image",
+      "required": true
+    },
+    {
+      "name": "ACE_GOLANG_IMAGE_VERSION",
+      "value": "1.11.0",
+      "description": "The version for the golang image",
+      "required": true
+    },
+    {
+      "name": "LOG_LEVEL",
+      "value": "trace",
+      "description": "A default log level for all components",
+      "required": true
+    }
+  ],
+  "objects": [
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "ace-golang",
+        "labels": {
+          "name": "ace-golang"
+        }
+      },
+      "spec": {
+        "selector": {
+          "name": "ace-golang"
+        },
+        "ports": [
+          {
+            "name": "ace-port",
+            "port": 9000,
+            "targetPort": 9000,
+            "protocol" : "TCP"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "ace-golang",
+        "labels": {
+          "name": "ace-golang"
+        }
+      },
+      "spec": {
+        "triggers": [
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "name": "ace-golang"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "ace-golang"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "ace-golang",
+                "image": "${ACE_GOLANG_IMAGE}:${ACE_GOLANG_IMAGE_VERSION}",
+                "ports": [
+                  {
+                    "containerPort": 9000
+                  }
+                ],
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/sys/info/isalive",
+                    "port": 9000
+                  },
+                  "initialDelaySeconds": 55,
+                  "timeoutSeconds": 5,
+                  "periodSeconds": 60,
+                  "successThreshold": 1,
+                  "failureThreshold": 2
+                },
+                "readinessProbe": {
+                  "httpGet": {
+                    "path": "/sys/info/isalive",
+                    "port": 9000
+                  },
+                  "initialDelaySeconds": 0,
+                  "timeoutSeconds": 5,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "failureThreshold": 1
+                },
+                "env": [
+                  {
+                    "name": "LOG_LEVEL",
+                    "value": "${LOG_LEVEL}"
+                  }
+                ],
+                "imagePullPolicy": "Always",
+                "resources": {
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "500Mi"
+                  },
+                  "requests": {
+                    "cpu": "10m",
+                    "memory": "250Mi"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

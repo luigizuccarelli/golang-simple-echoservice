@@ -1,6 +1,10 @@
 # Porfoliotracker middleware interface golang microservice
 
-A simple golang microservice with minimal json config. 
+A simple golang microservice with minimal json config.
+
+## Coverage Info
+
+![SonarQube](img/middlewareinterface-coverage.png) 
 
 ## Usage 
 

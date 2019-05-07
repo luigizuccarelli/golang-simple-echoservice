@@ -1,100 +1,155 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/rs/xid"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
-// MiddlewareLogin a http response and request wrapper for database insert
-// It takes a both response and request objects and returns void
-func MiddlewareLogin(w http.ResponseWriter, r *http.Request) {
+const (
+	USERNAME     = "username"
+	PASSWORD     = "password"
+	APITOKEN     = "apitoken"
+	ERRMSGFORMAT = " %s "
+)
 
-	var response Response
-	var payload SchemaInterface
+func (c Connectors) LoginData(body []byte) (string, error) {
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		response = Response{StatusCode: "500", Status: "ERROR", Message: "Could not read body data (MiddlewareLogin) " + err.Error(), Payload: payload}
-		w.WriteHeader(http.StatusInternalServerError)
+	logger.Trace("In function LoginData")
+
+	var j map[string]interface{}
+	var schema SchemaInterface
+	var apitoken = ""
+
+	e := json.Unmarshal(body, &j)
+	if e != nil {
+		logger.Error(fmt.Sprintf("LoginData %v\n", e.Error()))
+		return apitoken, e
 	}
-
-	apitoken, err := connectors.LoginData(body)
-	if err != nil {
-		response = Response{StatusCode: "500", Status: "ERROR", Message: "Login error (MiddlewareLogin) " + err.Error(), Payload: payload}
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		payload = SchemaInterface{MetaInfo: apitoken}
-		response = Response{StatusCode: "200", Status: "OK", Message: "MW data successfully retrieved", Payload: payload}
+	if j[USERNAME] == nil || j[PASSWORD] == nil {
+		return apitoken, errors.New("username and/or password field is nil")
 	}
+	logger.Debug(fmt.Sprintf("json data %v\n", j))
 
-	b, _ := json.MarshalIndent(response, "", "	")
-	fmt.Fprintf(w, string(b))
+	// use this for cors
+	//res.setHeader("Access-Control-Allow-Origin", "*")
+	//res.setHeader("Access-Control-Allow-Methods", "POST")
+	//res.setHeader("Access-Control-Allow-Headers", "accept, content-type")
+
+	// lets first check in the in-memory cache
+	key := j[USERNAME].(string) + ":" + j[PASSWORD].(string)
+	//h := sha256.New()
+	hashkey := sha256.Sum256([]byte(key))
+	val, err := c.Get("hash")
+	var newval [32]byte
+	copy(newval[:], []byte(val))
+	logger.Debug(fmt.Sprintf("Keys %x : %x", string(hashkey[:32]), val))
+	if val == "" || err != nil {
+		logger.Info(fmt.Sprintf("Key not found in cache %s", key))
+
+		req, err := http.NewRequest("GET", config.Url+"/username/"+j[USERNAME].(string)+"/password/"+j[PASSWORD].(string), nil)
+		req.Header.Set("token", config.Token)
+		resp, err := c.Http.Do(req)
+		logger.Info(fmt.Sprintf("Connected to host %s", config.Url))
+		if err != nil || resp.StatusCode != 200 {
+			logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
+			return apitoken, err
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
+			return apitoken, err
+		}
+		logger.Trace(fmt.Sprintf("Response from MW %s", string(body)))
+
+		errs := json.Unmarshal(body, &schema)
+		if errs != nil {
+			logger.Error(fmt.Sprintf(ERRMSGFORMAT, errs.Error()))
+			return apitoken, errs
+		}
+		logger.Debug(fmt.Sprintf("Schema Data %v ", schema))
+
+		//all, _ := json.MarshalIndent(schema, "", "	")
+		_, err = c.Set("all", string(body), time.Hour)
+		_, err = c.Set("hash", string(hashkey[:32]), time.Hour)
+		_, err = c.Set(schema.Accounts[0].CustomerNumber, string(body), time.Hour)
+		_, err = c.Set(schema.PostalAddresses[0].EmailAddress.EmailAddress, string(body), time.Hour)
+		logger.Info(fmt.Sprintf("CustomerNumber %s", schema.Accounts[0].CustomerNumber))
+
+		if err != nil {
+			return apitoken, err
+		}
+
+		apitoken = xid.New().String()
+		_, err = c.Set(APITOKEN, apitoken, time.Hour)
+	} else if newval != hashkey {
+		logger.Error(fmt.Sprintf("Hash token's don't match %s != %s", val, key))
+		return apitoken, errors.New("hash token does not match")
+	} else if hashkey == newval {
+		logger.Info(fmt.Sprintf("Key found in cache %s", key))
+		apitoken = xid.New().String()
+		_, err = c.Set(APITOKEN, apitoken, time.Hour)
+	}
+	return apitoken, nil
 }
 
-// MiddlewareData a http response and request wrapper for database update
-// It takes a both response and request objects and returns void
-func MiddlewareData(w http.ResponseWriter, r *http.Request) {
+func (c Connectors) AllData(b []byte) ([]byte, error) {
 
-	var response Response
-	var payload SchemaInterface
+	logger.Trace("In function AllData")
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		response = Response{StatusCode: "500", Status: "ERROR", Message: "Could not read body data (MiddlewareData) " + err.Error(), Payload: payload}
-		w.WriteHeader(http.StatusInternalServerError)
+	var subs []byte
+	var data string
+	var j map[string]interface{}
+
+	e := json.Unmarshal(b, &j)
+	if e != nil {
+		logger.Error(fmt.Sprintf("AllData %v\n", e.Error()))
+		return subs, e
 	}
+	logger.Debug(fmt.Sprintf("json data %v\n", j))
 
-	data, err := connectors.AllData(body)
-	if err != nil {
-		response = Response{StatusCode: "500", Status: "ERROR", Message: "Subscriptions data read (MiddlewareSubscriptions) " + err.Error()}
-		w.WriteHeader(http.StatusInternalServerError)
+	// lets first check in the in-memory cache
+	if j[APITOKEN] == nil {
+		return subs, errors.New("Invalid or empty api token")
+	}
+	apitoken := j[APITOKEN].(string)
+	val, err := c.Get(APITOKEN)
+	logger.Info(fmt.Sprintf("Apitoken from cache %s : from req object %s", val, apitoken))
+	if apitoken != val || err != nil {
+		return subs, err
 	} else {
-		e := json.Unmarshal(data, &payload)
+		data, e = c.Get("all")
 		if e != nil {
-			response = Response{StatusCode: "500", Status: "ERROR", Message: "Subscriptions unmarshal error (MiddlewareSubscriptions) " + e.Error()}
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			response = Response{StatusCode: "200", Status: "OK", Message: "MW data read successfully", Payload: payload}
+			return subs, e
 		}
 	}
-
-	b, _ := json.MarshalIndent(response, "", "	")
-	fmt.Fprintf(w, string(b))
+	subs = []byte(data)
+	return subs, nil
 }
 
-// It takes a both response and request objects and returns void
-func MiddlewareCustomerNumberData(w http.ResponseWriter, r *http.Request) {
+func (c Connectors) AllDataByCustomerNumber(customernumber string) ([]byte, error) {
 
-	var response Response
-	var payload SchemaInterface
-	var vars = mux.Vars(r)
+	logger.Trace("In function AllDataByCustomerNumber")
 
-	logger.Info(fmt.Sprintf("In function MiddlewareCustomerNumberData %v", vars))
+	var subs []byte
+	var data string
 
-	data, err := connectors.AllDataByCustomerNumber(vars["customernumber"])
-	if err != nil {
-		response = Response{StatusCode: "500", Status: "ERROR", Message: "Accounts data read (MiddlewareCustomerNumberData) " + err.Error()}
-		w.WriteHeader(http.StatusInternalServerError)
+	// lets first check in the in-memory cache
+	val, err := c.Get(customernumber)
+	if val == "" {
+		return subs, errors.New(fmt.Sprintf("CustomerNumber %s not found ", customernumber))
 	} else {
-		e := json.Unmarshal(data, &payload)
-		if e != nil {
-			response = Response{StatusCode: "500", Status: "ERROR", Message: "Account unmarshal error (MiddlewareCustomerNumberData) " + e.Error()}
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			response = Response{StatusCode: "200", Status: "OK", Message: "MW Account data read successfully", Payload: payload}
+		data, err = c.Get("all")
+		if err != nil {
+			return subs, err
 		}
 	}
-
-	b, _ := json.MarshalIndent(response, "", "	")
-	fmt.Fprintf(w, string(b))
-}
-
-func IsAlive(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	logger.Trace(fmt.Sprintf("used to mask cc %v", r))
-	logger.Trace(fmt.Sprintf("config data  %v", config))
-	fmt.Fprintf(w, "{\"isalive\": true , \"version\": \"1.0.0\"}")
+	subs = []byte(data)
+	return subs, nil
 }

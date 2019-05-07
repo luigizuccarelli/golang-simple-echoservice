@@ -2,145 +2,194 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/microlib/simple"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
+	"time"
 )
 
-func TestAllMiddleware(t *testing.T) {
-	var req *http.Request
-	var token string = ""
-	var response Response
+var (
+	// create a key value map (to fake redis)
+	store      map[string]string
+	logger     simple.Logger
+	config     Config
+	connectors Clients
+)
 
-	// create anonymous struct
-	tests := []struct {
-		Name     string
-		Method   string
-		Url      string
-		Payload  string
-		Handler  string
-		FileName string
-		want     int
-		errorMsg string
-	}{
-		{
-			"Test [Isalive] should pass",
-			"GET", "/v1/sys/info/isalive",
-			"",
-			"IsAlive",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"Test [MiddlewareLogin] should pass",
-			"POST",
-			"/v1/login",
-			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
-			"MiddlewareLogin",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"Test [MiddlewareData] should pass",
-			"POST",
-			"/v1/alldata",
-			"{\"apitoken\": \"\"}",
-			"MiddlewareData",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"Test [MiddlewareCustomerNumberData] should pass",
-			"GET",
-			"/v2/postaladdress/customernumber/000002096234",
-			"",
-			"MiddlewareCustomerNumberData",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"Test [MiddlewareLogin] should fail",
-			"POST",
-			"/v1/login",
-			"{\"user\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"pass\":\"TFMxNyA5QVQ=\"}",
-			"MiddlewareLogin",
-			"tests/payload-example.json",
-			http.StatusInternalServerError,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"Test [MiddlewareData] should fail",
-			"POST",
-			"/v1/alldata",
-			"{\"apitoken\": \"\"}",
-			"MiddlewareLogin",
-			"tests/payload-example.json",
-			http.StatusInternalServerError,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"Test [MiddlewareCustomerNumberData] should fail",
-			"GET",
-			"/v2/postaladdress/customernumber/00000",
-			"",
-			"MiddlewareCustomerNumberData",
-			"tests/payload-example.json",
-			http.StatusInternalServerError,
-			"Handler returned wrong status code got %d want %d",
-		},
+type Clients interface {
+	LoginData(body []byte) (string, error)
+	AllData(b []byte) ([]byte, error)
+	AllDataByCustomerNumber(customernumber string) ([]byte, error)
+	Get(string) (string, error)
+	Set(string, string, time.Duration) (string, error)
+	Close() error
+}
+
+type FakeRedis struct {
+}
+
+type Connectors struct {
+	// add mongodb connector here
+	// mongodb *mgo
+	Http  *http.Client
+	redis FakeRedis
+	name  string
+}
+
+type ConnectionData struct {
+	Name          string
+	RedisHost     string
+	RedisPort     string
+	HttpUrl       string
+	MongoHost     string
+	MongoPort     string
+	MongoDatabase string
+	MongoUser     string
+	MongoPassword string
+}
+
+func (r *Connectors) Get(key string) (string, error) {
+	return store[key], nil
+}
+
+func (r *Connectors) Set(key string, value string, expr time.Duration) (string, error) {
+	store[key] = value
+	return string(expr), nil
+}
+
+func (r *Connectors) Close() error {
+	store = nil
+	return nil
+}
+
+// RoundTripFunc .
+type RoundTripFunc func(req *http.Request) *http.Response
+
+// RoundTrip .
+func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+//NewTestClient returns *http.Client with Transport replaced to avoid making real calls
+func NewHttpTestClient(fn RoundTripFunc) *http.Client {
+	return &http.Client{
+		Transport: RoundTripFunc(fn),
+	}
+}
+
+func NewTestClients(data string, code int) Clients {
+
+	// we first load the json payload to simulate a call to middleware
+	// for now just ignore failures.
+	file, _ := ioutil.ReadFile(data)
+	httpclient := NewHttpTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: code,
+			// Send response to be tested
+
+			Body: ioutil.NopCloser(bytes.NewBufferString(string(file))),
+			// Must be set to non-nil value or it panics
+			Header: make(http.Header),
+		}
+	})
+
+	redisclient := FakeRedis{}
+	conns := &Connectors{redis: redisclient, Http: httpclient, name: "test"}
+	return conns
+}
+
+func assertEqual(t *testing.T, a interface{}, b interface{}) {
+	if a != b {
+		t.Fatalf("%s != %s", a, b)
+	}
+}
+
+func TestLoginData(t *testing.T) {
+
+	// read the config
+	config, _ := Init("config.json")
+	logger.Level = config.Level
+
+	// initialise our store (cache)
+	store = map[string]string{"hash": ""}
+	store = map[string]string{"all": ""}
+
+	connectors = NewTestClients("tests/payload-example.json", 200)
+	json := "{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}"
+	apitoken, err := connectors.LoginData([]byte(json))
+	//fmt.Println(fmt.Sprintf("Body %v", body))
+	if err != nil {
+		t.Errorf("The login test should pass")
 	}
 
-	for _, tt := range tests {
-		fmt.Printf("Executing test : %s \n", tt.Name)
-		if tt.Payload == "" {
-			req, _ = http.NewRequest(tt.Method, tt.Url, nil)
-		} else {
-			if strings.Contains(tt.Payload, "apitoken") {
-				tt.Payload = "{\"apitoken\": \"" + token + "\"}"
-			}
-			req, _ = http.NewRequest(tt.Method, tt.Url, bytes.NewBuffer([]byte(tt.Payload)))
-		}
-
-		connectors = NewTestClients(tt.FileName, tt.want)
-
-		// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-		rr := httptest.NewRecorder()
-		switch tt.Handler {
-		case "IsAlive":
-			handler := http.HandlerFunc(IsAlive)
-			handler.ServeHTTP(rr, req)
-		case "MiddlewareLogin":
-			handler := http.HandlerFunc(MiddlewareLogin)
-			handler.ServeHTTP(rr, req)
-		case "MiddlewareData":
-			handler := http.HandlerFunc(MiddlewareData)
-			handler.ServeHTTP(rr, req)
-		case "MiddlewareCustomerNumberData":
-			router := mux.NewRouter()
-			router.HandleFunc("/v2/postaladdress/customernumber/{customernumber}", MiddlewareCustomerNumberData)
-			router.ServeHTTP(rr, req)
-		}
-		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-		// directly and pass in our Request and ResponseRecorder.
-		body, e := ioutil.ReadAll(rr.Body)
-		if e != nil {
-			t.Fatalf("Should not fail : found error %v", e)
-		}
-		fmt.Println(fmt.Sprintf("Response %s", string(body)))
-		// ignore errors here
-		json.Unmarshal(body, &response)
-		token = response.Payload.MetaInfo
-		if rr.Code != tt.want {
-			t.Errorf(tt.errorMsg, rr.Code, http.StatusOK)
-		}
+	// test for failure
+	json = "{\"{\"}"
+	_, err = connectors.LoginData([]byte(json))
+	if err == nil {
+		t.Errorf("The login test should fail")
 	}
+
+	// test for failure
+	json = "{\"user\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"pass\":\"TFMxNyA5QVQ=\"}"
+	_, err = connectors.LoginData([]byte(json))
+	if err == nil {
+		t.Errorf("The login test should fail")
+	}
+
+	// test for failure
+	connectors = NewTestClients("tests/config-errors.json", 200)
+	json = "{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMQVQ=\"}"
+	_, err = connectors.LoginData([]byte(json))
+	if err == nil {
+		t.Errorf("The login test should fail")
+	}
+
+	// test for pass
+	connectors = NewTestClients("tests/payload-example.json", 200)
+	json = "{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}"
+	apitoken, err = connectors.LoginData([]byte(json))
+	if err != nil {
+		t.Errorf("The login test should pass")
+	}
+
+	// test for pass
+	json = "{\"apitoken\": \"dfsfdsfdsfsdf\"}"
+	_, err = connectors.AllData([]byte(json))
+	if err != nil {
+		t.Errorf("The alldata test should pass")
+	}
+
+	// test for pass
+	json = "{\"apitoken\": \"" + apitoken + "\"}"
+	_, err = connectors.AllData([]byte(json))
+	if err != nil {
+		t.Errorf("The alldata test should pass")
+	}
+
+	// test for fail
+	json = ""
+	_, err = connectors.AllData([]byte(json))
+	if err == nil {
+		t.Errorf("The alldata test should fail")
+	}
+
+	// test for fail
+	json = "{\"{\": \"}\"}"
+	_, err = connectors.AllData([]byte(json))
+	if err == nil {
+		t.Errorf("The alldata test should fail")
+	}
+
+	_, err = connectors.AllDataByCustomerNumber("")
+	if err == nil {
+		t.Errorf("The alldatabycustomernumber test should fail")
+	}
+
+	// should pass
+	_, err = connectors.AllDataByCustomerNumber("000002096234")
+	if err != nil {
+		t.Errorf("The alldatabycustomernumber test should pass")
+	}
+
 }

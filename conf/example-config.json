@@ -1,8 +1,9 @@
 {
-    "version": "1.0.0",
-    "port": "9000",
-    "level": "trace",
-    "url": "https://servicegateway.agora-inc.com/middleware/data",
+    "version": "1.0.1",
+    "port": "9001",
+    "level": "info",
+    "url": "",
+    "microservice": "",
     "token": "",
     "mongodb" : {
       "host": "",
@@ -14,7 +15,8 @@
       "adminpwd": ""
     },
     "redisdb" : {
-      "host": "127.0.0.1",
-      "port": "6379"
+      "host": "",
+      "port": "",
+      "password": ""
     }
 }

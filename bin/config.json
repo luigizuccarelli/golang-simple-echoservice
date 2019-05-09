@@ -3,9 +3,9 @@
     "port": "9003",
     "level": "info",
     "url": "https://servicegateway.agora-inc.com/middleware/data",
-    "microservice": ",
+    "microservice": "",
     "tokenold": "",
-    "token": "",
+    "token": "SOC*s8iac&ouW=l8x7ESwl@q",
     "mongodb" : {
       "host": "mongodb.portfoliotracker.svc",
       "port": "27017",

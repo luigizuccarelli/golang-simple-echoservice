@@ -24,10 +24,10 @@ func startHttpServer(cfg Config) *http.Server {
 	srv := &http.Server{Addr: ":" + cfg.Port}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/v1/sys/info/isalive", IsAlive).Methods("GET")
-	r.HandleFunc("/v1/login", MiddlewareLogin).Methods("POST")
-	r.HandleFunc("/v1/alldata", MiddlewareData).Methods("POST")
-	r.HandleFunc("/v2/postaladdress/customernumber/{customerNumber}", MiddlewareCustomerNumberData).Methods("GET")
+	r.HandleFunc("/api/v1/sys/info/isalive", IsAlive).Methods("GET")
+	r.HandleFunc("/api/v1/login", MiddlewareLogin).Methods("POST")
+	r.HandleFunc("/api/v1/alldata", MiddlewareData).Methods("POST")
+	r.HandleFunc("/api/v2/postaladdress/customernumber/{customerNumber}", MiddlewareCustomerNumberData).Methods("GET")
 	http.Handle("/", r)
 
 	connectionData := ConnectionData{

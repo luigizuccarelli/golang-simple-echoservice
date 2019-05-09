@@ -1,0 +1,147 @@
+openapi: 3.0.0
+info:
+  description: OpenAPI standard for Portfolio Tracker
+  title: middlewareservice-api
+  version: 1.0.1
+  contact:
+    name: API Support
+    url: 'http://www.threefoldsystems.com/support'
+    email: info@threefooldsystems.com
+paths:
+  /middlewareservice/api/v1/sys/info/isalive:
+    get:
+      summary: Openshift readiness and liveliness probes
+      responses:
+        '200':
+          description: Readiness and liveliness probe check
+          content:
+            text/plain:
+              schema:
+                type: string
+  /middlewareservice/api/v1/login:
+    post:
+      summary: Api endpoint that calls the middleware login api to get profile data
+      operationId: login
+      requestBody:
+        description: Middleware login
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      responses:
+        '200':
+          description: Setup the document store database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Response'
+  /middlewareservice/api/v1/alldata:
+    post:
+      summary: Api endpoint that calls middleware api to get profile data
+      operationId: alldata
+      requestBody:
+        description: Middleware json profile data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  format: encoded
+      responses:
+        '200':
+          description: Get profile data by token (user needs to be logged in)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Response'
+servers:
+  - url: ' https://nginx-service-portfoliotracker.e4ff.pro-eu-west-1.openshiftapps.com'
+    variables:
+      port:
+        default: '443'
+      basePath:
+        default: /
+    description: base path and url for microservices
+components:
+  schemas:
+    SchemaInterface:
+      type: object
+      properties:
+        id:
+          type: object
+          format: int64
+        lastupdate:
+          type: number
+          format: int64
+        metainfo:
+          type: string
+          description: (returns unique token)
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Profile'
+    Profile:
+      type: object
+      properties:
+        name:
+          type: string
+        customerid:
+          type: string
+        email:
+          type: string
+        token:
+          type: string
+          format: encoded
+    Login:
+      type: object
+      properties:
+        email:
+          type: string
+          format: encoded
+        password:
+          type: string
+          format: encoded
+    Response:
+      type: object
+      properties:
+        statuscode:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        payload:
+          $ref: '#/components/schemas/SchemaInterface'
+  responses:
+    NotFound:
+      description: Entity not found.
+    IllegalInput:
+      description: Illegal input for operation.
+    Forbidden:
+      description: Not allowed to access this endpoint
+    GeneralError:
+      description: General Error
+      content:
+        application/json:
+          schema:
+            type: string

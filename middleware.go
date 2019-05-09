@@ -123,7 +123,7 @@ func IsAlive(w http.ResponseWriter, r *http.Request) {
 	addHeaders(w, r)
 	logger.Debug(fmt.Sprintf("used to mask cc %v", r))
 	logger.Trace(fmt.Sprintf("config data  %v", config))
-	fmt.Fprintf(w, "{\"isalive\": true , \"version\": \"1.0.0\"}")
+	fmt.Fprintf(w, "{\"isalive\": true , \"version\": \""+config.Version+"\"}")
 }
 
 // headers (with cors) utility

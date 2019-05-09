@@ -20,6 +20,7 @@ import (
 
 // Config structure - define the json format for our microservice config
 type Config struct {
+	Version string `json:"version"`
 	Level   string `json:"level"`
 	Basedir string `json:"base_dir"`
 	Port    string `json:"port"`

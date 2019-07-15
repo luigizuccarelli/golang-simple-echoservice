@@ -54,11 +54,9 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">/home/lzuccarelli/Projects/portfolio-tracker/portfoliotracker-middlewareinterface/config.go (100.0%)</option>
+				<option value="file0">/home/lzuccarelli/Projects/myportfolio/myportfolio-middlewareinterface/handlers.go (78.7%)</option>
 				
-				<option value="file1">/home/lzuccarelli/Projects/portfolio-tracker/portfoliotracker-middlewareinterface/handlers.go (80.0%)</option>
-				
-				<option value="file2">/home/lzuccarelli/Projects/portfolio-tracker/portfoliotracker-middlewareinterface/middleware.go (89.5%)</option>
+				<option value="file1">/home/lzuccarelli/Projects/myportfolio/myportfolio-middlewareinterface/middleware.go (83.3%)</option>
 				
 				</select>
 			</div>
@@ -75,272 +73,6 @@
 		<pre class="file" id="file0" style="display: none">package main
 
 import (
-        "encoding/json"
-        "errors"
-        "fmt"
-        "io/ioutil"
-        "os"
-        "time"
-)
-
-/**
- * The json config will always be in the form of parent.key:value pair
- * the reasoning here is that it is easy to maintain and use
- * and also if required can be migtrated to a key value store such as redis
- *
- * Don't dig it - then feel welcome to change it to your hearts content - knock yourself out
- *
- **/
-
-// Config structure - define the json format for our microservice config
-type Config struct {
-        Level   string `json:"level"`
-        Basedir string `json:"base_dir"`
-        Port    string `json:"port"`
-        Cache   string `json:"cache"`
-        Url     string `json:"url"`
-        Token   string `json:"token"`
-        MongoDB Mongodb
-        RedisDB Redis
-}
-
-// Mongodb structure - the base config to connect to mongodb
-type Mongodb struct {
-        Host           string `json:"host"`
-        Port           string `json:"port-mongo"`
-        DatabaseName   string `json:"name"`
-        User           string `json:"user"`
-        Password       string `json:"pwd"`
-        AdminUser      string `json:"adminuser"`
-        AdminPasssword string `json:"adminpwd"`
-}
-
-type Redis struct {
-        Host string `json:"host"`
-        Port string `json:"port"`
-}
-
-// declare and set some vars and constants
-var start time.Time
-
-const (
-        timeformat string = "2006/01/02 03:04:05"
-        fmterror   string = "%s \x1b[1;31m[%s] \x1b[0m : %v \n"
-        fmtinfo    string = "%s \x1b[1;34m[%s] \x1b[0m  : %s \n"
-)
-
-// ReadFile - a utility function that reads the file
-// The design here also ensures our test coverage is high
-// It takes in a string and returns a byte array and error object
-func ReadFile(filename string) ([]byte, error) <span class="cov8" title="1">{
-        file, err := ioutil.ReadFile(filename)
-        if err != nil </span><span class="cov8" title="1">{
-                fmt.Printf(fmterror, start.Format(timeformat), "ERROR", err)
-                return file, err
-        }</span> else<span class="cov8" title="1"> {
-                return file, nil
-        }</span>
-}
-
-// ParseJson - a utility function that parses a byte array (json)
-// The design here also ensures our test coverage is high
-// i.e we dont have to run this multiple of times to increase coverage
-// It takes in a byte array returns both Config and error objects
-func ParseJson(b []byte) (Config, error) <span class="cov8" title="1">{
-        var cfg Config
-        err := json.Unmarshal(b, &amp;cfg)
-        if err != nil </span><span class="cov8" title="1">{
-                fmt.Printf(fmterror, start.Format(timeformat), "ERROR", err)
-                return cfg, err
-        }</span> else<span class="cov8" title="1"> {
-                return cfg, nil
-        }</span>
-}
-
-// ValidateJson - a utility function that ensures the required fields are valid
-// Also helps in ensuring high test coverage
-// As the logger can only be configured after we read the config
-// I make use of the stdout for error logging
-// It takes in a Config object and returns both Config and error objects
-func ValidateJson(cfg Config) (Config, error) <span class="cov8" title="1">{
-        e := "Config Level is a mandatory field"
-        if cfg.Level == "" </span><span class="cov8" title="1">{
-                fmt.Printf(fmterror, start.Format(timeformat), "ERROR", e)
-                return cfg, errors.New(e)
-        }</span> else<span class="cov8" title="1"> {
-                // override if we have envars set
-                if os.Getenv("LOG_LEVEL") != "" </span><span class="cov8" title="1">{
-                        cfg.Level = os.Getenv("LOG_LEVEL")
-                }</span>
-        }
-
-        <span class="cov8" title="1">e = "Config Port is a mandatory field"
-        if cfg.Port == "" </span><span class="cov8" title="1">{
-                fmt.Printf(fmterror, start.Format(timeformat), "ERROR", e)
-                return cfg, errors.New(e)
-        }</span> else<span class="cov8" title="1"> {
-                // override if we have envars set
-                if os.Getenv("SERVER_PORT") != "" </span><span class="cov8" title="1">{
-                        cfg.Port = os.Getenv("SERVER_PORT")
-                }</span>
-        }
-
-        <span class="cov8" title="1">e = "Redis Host and Port are mandatory fields"
-        if cfg.RedisDB.Port == "" || cfg.RedisDB.Host == "" </span><span class="cov8" title="1">{
-                fmt.Printf(fmterror, start.Format(timeformat), "ERROR", e)
-                return cfg, errors.New(e)
-        }</span> else<span class="cov8" title="1"> {
-                // override if we have envars set
-                if os.Getenv("REDIS_HOST") != "" </span><span class="cov8" title="1">{
-                        cfg.RedisDB.Host = os.Getenv("REDIS_HOST")
-                }</span>
-                <span class="cov8" title="1">if os.Getenv("REDIS_PORT") != "" </span><span class="cov8" title="1">{
-                        cfg.RedisDB.Port = os.Getenv("REDIS_PORT")
-                }</span>
-        }
-
-        <span class="cov8" title="1">if os.Getenv("MW_URL") != "" </span><span class="cov8" title="1">{
-                cfg.Url = os.Getenv("MW_URL")
-        }</span>
-
-        <span class="cov8" title="1">if os.Getenv("TOKEN") != "" </span><span class="cov8" title="1">{
-                cfg.Token = os.Getenv("TOKEN")
-        }</span>
-
-        // all checks pass we are good to go
-        <span class="cov8" title="1">return cfg, nil</span>
-}
-
-// Init - Combine all our utility functions to ensure a valid schema and json data
-func Init(filename string) (Config, error) <span class="cov8" title="1">{
-        start = time.Now()
-        var cfg Config
-
-        file, err := ReadFile(filename)
-        if err != nil </span><span class="cov8" title="1">{
-                return cfg, err
-        }</span>
-
-        <span class="cov8" title="1">cfg, e := ParseJson(file)
-        if e != nil </span><span class="cov8" title="1">{
-                return cfg, e
-        }</span>
-
-        <span class="cov8" title="1">cfg, er := ValidateJson(cfg)
-        if er != nil </span><span class="cov8" title="1">{
-                return cfg, er
-        }</span>
-
-        <span class="cov8" title="1">fmt.Printf(fmtinfo, start.Format(timeformat), "INFO", "Config data read successfully")
-        return cfg, nil</span>
-}
-</pre>
-		
-		<pre class="file" id="file1" style="display: none">package main
-
-import (
-        "encoding/json"
-        "fmt"
-        "github.com/gorilla/mux"
-        "io/ioutil"
-        "net/http"
-)
-
-// MiddlewareLogin a http response and request wrapper for database insert
-// It takes a both response and request objects and returns void
-func MiddlewareLogin(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
-
-        var response Response
-        var payload SchemaInterface
-
-        body, err := ioutil.ReadAll(r.Body)
-        if err != nil </span><span class="cov0" title="0">{
-                response = Response{StatusCode: "500", Status: "ERROR", Message: "Could not read body data (MiddlewareLogin) " + err.Error(), Payload: payload}
-                w.WriteHeader(http.StatusInternalServerError)
-        }</span>
-
-        <span class="cov8" title="1">apitoken, err := connectors.LoginData(body)
-        if err != nil </span><span class="cov8" title="1">{
-                response = Response{StatusCode: "500", Status: "ERROR", Message: "Login error (MiddlewareLogin) " + err.Error(), Payload: payload}
-                w.WriteHeader(http.StatusInternalServerError)
-        }</span> else<span class="cov8" title="1"> {
-                payload = SchemaInterface{MetaInfo: apitoken}
-                response = Response{StatusCode: "200", Status: "OK", Message: "MW data successfully retrieved", Payload: payload}
-        }</span>
-
-        <span class="cov8" title="1">b, _ := json.MarshalIndent(response, "", "        ")
-        fmt.Fprintf(w, string(b))</span>
-}
-
-// MiddlewareData a http response and request wrapper for database update
-// It takes a both response and request objects and returns void
-func MiddlewareData(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
-
-        var response Response
-        var payload SchemaInterface
-
-        body, err := ioutil.ReadAll(r.Body)
-        if err != nil </span><span class="cov0" title="0">{
-                response = Response{StatusCode: "500", Status: "ERROR", Message: "Could not read body data (MiddlewareData) " + err.Error(), Payload: payload}
-                w.WriteHeader(http.StatusInternalServerError)
-        }</span>
-
-        <span class="cov8" title="1">data, err := connectors.AllData(body)
-        if err != nil </span><span class="cov0" title="0">{
-                response = Response{StatusCode: "500", Status: "ERROR", Message: "Subscriptions data read (MiddlewareSubscriptions) " + err.Error()}
-                w.WriteHeader(http.StatusInternalServerError)
-        }</span> else<span class="cov8" title="1"> {
-                e := json.Unmarshal(data, &amp;payload)
-                if e != nil </span><span class="cov0" title="0">{
-                        response = Response{StatusCode: "500", Status: "ERROR", Message: "Subscriptions unmarshal error (MiddlewareSubscriptions) " + e.Error()}
-                        w.WriteHeader(http.StatusInternalServerError)
-                }</span> else<span class="cov8" title="1"> {
-                        response = Response{StatusCode: "200", Status: "OK", Message: "MW data read successfully", Payload: payload}
-                }</span>
-        }
-
-        <span class="cov8" title="1">b, _ := json.MarshalIndent(response, "", "        ")
-        fmt.Fprintf(w, string(b))</span>
-}
-
-// It takes a both response and request objects and returns void
-func MiddlewareCustomerNumberData(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
-
-        var response Response
-        var payload SchemaInterface
-        var vars = mux.Vars(r)
-
-        logger.Info(fmt.Sprintf("In function MiddlewareCustomerNumberData %v", vars))
-
-        data, err := connectors.AllDataByCustomerNumber(vars["customernumber"])
-        if err != nil </span><span class="cov8" title="1">{
-                response = Response{StatusCode: "500", Status: "ERROR", Message: "Accounts data read (MiddlewareCustomerNumberData) " + err.Error()}
-                w.WriteHeader(http.StatusInternalServerError)
-        }</span> else<span class="cov8" title="1"> {
-                e := json.Unmarshal(data, &amp;payload)
-                if e != nil </span><span class="cov0" title="0">{
-                        response = Response{StatusCode: "500", Status: "ERROR", Message: "Account unmarshal error (MiddlewareCustomerNumberData) " + e.Error()}
-                        w.WriteHeader(http.StatusInternalServerError)
-                }</span> else<span class="cov8" title="1"> {
-                        response = Response{StatusCode: "200", Status: "OK", Message: "MW Account data read successfully", Payload: payload}
-                }</span>
-        }
-
-        <span class="cov8" title="1">b, _ := json.MarshalIndent(response, "", "        ")
-        fmt.Fprintf(w, string(b))</span>
-}
-
-func IsAlive(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
-        w.Header().Set("Content-Type", "application/json")
-        logger.Trace(fmt.Sprintf("used to mask cc %v", r))
-        logger.Trace(fmt.Sprintf("config data  %v", config))
-        fmt.Fprintf(w, "{\"isalive\": true , \"version\": \"1.0.0\"}")
-}</span>
-</pre>
-		
-		<pre class="file" id="file2" style="display: none">package main
-
-import (
         "crypto/sha256"
         "encoding/json"
         "errors"
@@ -348,6 +80,7 @@ import (
         "github.com/rs/xid"
         "io/ioutil"
         "net/http"
+        "os"
         "time"
 )
 
@@ -376,14 +109,8 @@ func (c Connectors) LoginData(body []byte) (string, error) <span class="cov8" ti
         }</span>
         <span class="cov8" title="1">logger.Debug(fmt.Sprintf("json data %v\n", j))
 
-        // use this for cors
-        //res.setHeader("Access-Control-Allow-Origin", "*")
-        //res.setHeader("Access-Control-Allow-Methods", "POST")
-        //res.setHeader("Access-Control-Allow-Headers", "accept, content-type")
-
         // lets first check in the in-memory cache
         key := j[USERNAME].(string) + ":" + j[PASSWORD].(string)
-        //h := sha256.New()
         hashkey := sha256.Sum256([]byte(key))
         val, err := c.Get("hash")
         var newval [32]byte
@@ -392,10 +119,10 @@ func (c Connectors) LoginData(body []byte) (string, error) <span class="cov8" ti
         if val == "" || err != nil </span><span class="cov8" title="1">{
                 logger.Info(fmt.Sprintf("Key not found in cache %s", key))
 
-                req, err := http.NewRequest("GET", config.Url+"/username/"+j[USERNAME].(string)+"/password/"+j[PASSWORD].(string), nil)
-                req.Header.Set("token", config.Token)
+                req, err := http.NewRequest("GET", os.Getenv("URL")+"/username/"+j[USERNAME].(string)+"/password/"+j[PASSWORD].(string), nil)
+                req.Header.Set("token", os.Getenv("TOKEN"))
                 resp, err := c.Http.Do(req)
-                logger.Info(fmt.Sprintf("Connected to host %s", config.Url))
+                logger.Info(fmt.Sprintf("Connected to host %s", os.Getenv("URL")))
                 if err != nil || resp.StatusCode != 200 </span><span class="cov0" title="0">{
                         logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
                         return apitoken, err
@@ -406,29 +133,25 @@ func (c Connectors) LoginData(body []byte) (string, error) <span class="cov8" ti
                         logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
                         return apitoken, err
                 }</span>
-                <span class="cov8" title="1">logger.Trace(fmt.Sprintf("Response from MW %s", string(body)))
 
-                errs := json.Unmarshal(body, &amp;schema)
+                <span class="cov8" title="1">errs := json.Unmarshal(body, &amp;schema)
                 if errs != nil </span><span class="cov0" title="0">{
                         logger.Error(fmt.Sprintf(ERRMSGFORMAT, errs.Error()))
                         return apitoken, errs
                 }</span>
-                <span class="cov8" title="1">logger.Debug(fmt.Sprintf("Schema Data %v ", schema))
 
-                //all, _ := json.MarshalIndent(schema, "", "        ")
+                <span class="cov8" title="1">logger.Debug(fmt.Sprintf("Response from MW call %s", string(body)))
                 _, err = c.Set("all", string(body), time.Hour)
                 _, err = c.Set("hash", string(hashkey[:32]), time.Hour)
-                _, err = c.Set(schema.Accounts[0].CustomerNumber, string(body), time.Hour)
-                _, err = c.Set(schema.PostalAddresses[0].EmailAddress.EmailAddress, string(body), time.Hour)
-                logger.Info(fmt.Sprintf("CustomerNumber %s", schema.Accounts[0].CustomerNumber))
 
                 if err != nil </span><span class="cov0" title="0">{
+                        logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
                         return apitoken, err
                 }</span>
 
                 <span class="cov8" title="1">apitoken = xid.New().String()
                 _, err = c.Set(APITOKEN, apitoken, time.Hour)</span>
-        } else<span class="cov8" title="1"> if newval != hashkey </span><span class="cov8" title="1">{
+        } else<span class="cov8" title="1"> if newval != hashkey </span><span class="cov0" title="0">{
                 logger.Error(fmt.Sprintf("Hash token's don't match %s != %s", val, key))
                 return apitoken, errors.New("hash token does not match")
         }</span> else<span class="cov8" title="1"> if hashkey == newval </span><span class="cov8" title="1">{
@@ -448,11 +171,11 @@ func (c Connectors) AllData(b []byte) ([]byte, error) <span class="cov8" title="
         var j map[string]interface{}
 
         e := json.Unmarshal(b, &amp;j)
-        if e != nil </span><span class="cov8" title="1">{
+        if e != nil </span><span class="cov0" title="0">{
                 logger.Error(fmt.Sprintf("AllData %v\n", e.Error()))
                 return subs, e
         }</span>
-        <span class="cov8" title="1">logger.Debug(fmt.Sprintf("json data %v\n", j))
+        <span class="cov8" title="1">logger.Debug(fmt.Sprintf("Function AllData json data %v\n", j))
 
         // lets first check in the in-memory cache
         if j[APITOKEN] == nil </span><span class="cov8" title="1">{
@@ -460,38 +183,133 @@ func (c Connectors) AllData(b []byte) ([]byte, error) <span class="cov8" title="
         }</span>
         <span class="cov8" title="1">apitoken := j[APITOKEN].(string)
         val, err := c.Get(APITOKEN)
-        logger.Info(fmt.Sprintf("Apitoken from cache %s : from req object %s", val, apitoken))
-        if apitoken != val || err != nil </span><span class="cov8" title="1">{
+        logger.Trace(fmt.Sprintf("Function AllData : apitoken from cache %s : from req object %s", val, apitoken))
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(fmt.Sprintf("Function AllData : error object %s ", err.Error()))
                 return subs, err
         }</span> else<span class="cov8" title="1"> {
                 data, e = c.Get("all")
+                logger.Debug(fmt.Sprintf("Function AllData data from cache %s", data))
                 if e != nil </span><span class="cov0" title="0">{
+                        logger.Error(fmt.Sprintf("Function AllData : error object %s ", e.Error()))
                         return subs, e
                 }</span>
         }
         <span class="cov8" title="1">subs = []byte(data)
         return subs, nil</span>
 }
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package main
 
-func (c Connectors) AllDataByCustomerNumber(customernumber string) ([]byte, error) <span class="cov8" title="1">{
+import (
+        "encoding/json"
+        "fmt"
+        "io/ioutil"
+        "net/http"
+        "os"
+        "strings"
+)
 
-        logger.Trace("In function AllDataByCustomerNumber")
+const (
+        CONTENTTYPE     string = "Content-Type"
+        APPLICATIONJSON string = "application/json"
+)
 
-        var subs []byte
-        var data string
+// MiddlewareLogin a http response and request wrapper for database insert
+// It takes a both response and request objects and returns void
+func MiddlewareLogin(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
 
-        // lets first check in the in-memory cache
-        val, err := c.Get(customernumber)
-        if val == "" </span><span class="cov8" title="1">{
-                return subs, errors.New(fmt.Sprintf("CustomerNumber %s not found ", customernumber))
+        var response Response
+        var payload SchemaInterface
+
+        addHeaders(w, r)
+        if r.Method == "OPTIONS" </span><span class="cov8" title="1">{
+                w.WriteHeader(http.StatusOK)
+                fmt.Fprintf(w, "")
+                return
+        }</span>
+
+        <span class="cov8" title="1">body, err := ioutil.ReadAll(r.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                response = Response{StatusCode: "500", Status: "ERROR", Message: "Could not read body data (MiddlewareLogin) " + err.Error(), Payload: payload}
+                w.WriteHeader(http.StatusInternalServerError)
+        }</span>
+
+        <span class="cov8" title="1">apitoken, err := connectors.LoginData(body)
+        if err != nil </span><span class="cov8" title="1">{
+                response = Response{StatusCode: "500", Status: "ERROR", Message: "Login error (MiddlewareLogin) " + err.Error(), Payload: payload}
+                w.WriteHeader(http.StatusInternalServerError)
         }</span> else<span class="cov8" title="1"> {
-                data, err = c.Get("all")
-                if err != nil </span><span class="cov0" title="0">{
-                        return subs, err
+                payload = SchemaInterface{MetaInfo: apitoken}
+                response = Response{StatusCode: "200", Status: "OK", Message: "MW data successfully retrieved", Payload: payload}
+        }</span>
+
+        <span class="cov8" title="1">b, _ := json.MarshalIndent(response, "", "        ")
+        fmt.Fprintf(w, string(b))</span>
+}
+
+// MiddlewareData a http response and request wrapper for database update
+// It takes a both response and request objects and returns void
+func MiddlewareData(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+
+        var response Response
+        var payload SchemaInterface
+
+        addHeaders(w, r)
+        if r.Method == "OPTIONS" </span><span class="cov8" title="1">{
+                w.WriteHeader(http.StatusOK)
+                fmt.Fprintf(w, "")
+                return
+        }</span>
+
+        <span class="cov8" title="1">body, err := ioutil.ReadAll(r.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                response = Response{StatusCode: "500", Status: "ERROR", Message: "Could not read body data (MiddlewareData) " + err.Error(), Payload: payload}
+                w.WriteHeader(http.StatusInternalServerError)
+        }</span>
+
+        <span class="cov8" title="1">data, err := connectors.AllData(body)
+        if err != nil </span><span class="cov8" title="1">{
+                response = Response{StatusCode: "500", Status: "ERROR", Message: "Subscriptions data read (MiddlewareData) " + err.Error()}
+                w.WriteHeader(http.StatusInternalServerError)
+        }</span> else<span class="cov8" title="1"> {
+                e := json.Unmarshal(data, &amp;payload)
+                if e != nil </span><span class="cov0" title="0">{
+                        response = Response{StatusCode: "500", Status: "ERROR", Message: "Subscriptions unmarshal error (MiddlewareData) " + e.Error()}
+                        w.WriteHeader(http.StatusInternalServerError)
+                }</span> else<span class="cov8" title="1"> {
+                        response = Response{StatusCode: "200", Status: "OK", Message: "MW data read successfully", Payload: payload}
                 }</span>
         }
-        <span class="cov8" title="1">subs = []byte(data)
-        return subs, nil</span>
+
+        <span class="cov8" title="1">b, _ := json.MarshalIndent(response, "", "        ")
+        fmt.Fprintf(w, string(b))</span>
+}
+
+func IsAlive(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        addHeaders(w, r)
+        logger.Debug(fmt.Sprintf("used to mask cc %v", r))
+        fmt.Fprintf(w, "{\"isalive\": true , \"version\": \""+os.Getenv("VERSION")+"\"}")
+}</span>
+
+// headers (with cors) utility
+func addHeaders(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        var request []string
+        for name, headers := range r.Header </span><span class="cov0" title="0">{
+                name = strings.ToLower(name)
+                for _, h := range headers </span><span class="cov0" title="0">{
+                        request = append(request, fmt.Sprintf("%v: %v", name, h))
+                }</span>
+        }
+
+        <span class="cov8" title="1">logger.Trace(fmt.Sprintf("Headers : %s", request))
+
+        w.Header().Set(CONTENTTYPE, APPLICATIONJSON)
+        // use this for cors
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+        w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")</span>
 }
 </pre>
 		

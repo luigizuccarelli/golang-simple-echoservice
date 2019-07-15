@@ -10,7 +10,6 @@ import (
 type Clients interface {
 	LoginData(body []byte) (string, error)
 	AllData(b []byte) ([]byte, error)
-	AllDataByCustomerNumber(customernumber string) ([]byte, error)
 	Get(string) (string, error)
 	Set(string, string, time.Duration) (string, error)
 	Close() error

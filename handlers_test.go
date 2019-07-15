@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/microlib/simple"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 )
@@ -13,14 +15,12 @@ var (
 	// create a key value map (to fake redis)
 	store      map[string]string
 	logger     simple.Logger
-	config     Config
 	connectors Clients
 )
 
 type Clients interface {
 	LoginData(body []byte) (string, error)
 	AllData(b []byte) ([]byte, error)
-	AllDataByCustomerNumber(customernumber string) ([]byte, error)
 	Get(string) (string, error)
 	Set(string, string, time.Duration) (string, error)
 	Close() error
@@ -80,6 +80,12 @@ func NewHttpTestClient(fn RoundTripFunc) *http.Client {
 
 func NewTestClients(data string, code int) Clients {
 
+	// set all env variables for teting
+	os.Setenv("VERSION", "1.1.0")
+	os.Setenv("LOG_LEVEL", "info")
+
+	logger.Level = os.Getenv("LOG_LEVEL")
+
 	// we first load the json payload to simulate a call to middleware
 	// for now just ignore failures.
 	file, _ := ioutil.ReadFile(data)
@@ -87,7 +93,6 @@ func NewTestClients(data string, code int) Clients {
 		return &http.Response{
 			StatusCode: code,
 			// Send response to be tested
-
 			Body: ioutil.NopCloser(bytes.NewBufferString(string(file))),
 			// Must be set to non-nil value or it panics
 			Header: make(http.Header),
@@ -107,89 +112,83 @@ func assertEqual(t *testing.T, a interface{}, b interface{}) {
 
 func TestLoginData(t *testing.T) {
 
-	// read the config
-	config, _ := Init("config.json")
-	logger.Level = config.Level
-
-	// initialise our store (cache)
+	var err error
 	store = map[string]string{"hash": ""}
 	store = map[string]string{"all": ""}
 
-	connectors = NewTestClients("tests/payload-example.json", 200)
-	json := "{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}"
-	apitoken, err := connectors.LoginData([]byte(json))
-	//fmt.Println(fmt.Sprintf("Body %v", body))
-	if err != nil {
-		t.Errorf("The login test should pass")
+	// create anonymous struct
+	tests := []struct {
+		Name     string
+		Payload  string
+		Handler  string
+		FileName string
+		Want     int
+		errorMsg string
+	}{
+		{
+			"[TEST] Login with valid param and payload should pass",
+			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
+			"LoginData",
+			"tests/payload-example.json",
+			http.StatusOK,
+			"Handler returned wrong status code got %d want %d",
+		},
+		{
+			"[TEST] Login with invalid param and payload should fail",
+			"{\"user\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"pass\":\"TFMxNyA5QVQ=\"}",
+			"LoginData",
+			"tests/payload-example.json",
+			http.StatusInternalServerError,
+			"Handler returned wrong status code got %d want %d",
+		},
+		{
+			"[TEST] Login with invalid payload should fail",
+			"{\"",
+			"LoginData",
+			"tests/payload-example.json",
+			http.StatusInternalServerError,
+			"Handler returned wrong status code got %d want %d",
+		},
+		{
+			"[TEST] AllData with invalid response data should fail",
+			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
+			"AllData",
+			"tests/payload-errors.json",
+			http.StatusInternalServerError,
+			"Handler returned wrong status code got %d want %d",
+		},
+		{
+			"[TEST] Alldata with valid param and payload should pass",
+			"{\"apitoken\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
+			"AllData",
+			"tests/payload-example.json",
+			http.StatusOK,
+			"Handler returned wrong status code got %d want %d",
+		},
+		{
+			"[TEST] Alldata with invalid param and payload should fail",
+			"{\"apit\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\"}",
+			"AllData",
+			"tests/payload-example.json",
+			http.StatusInternalServerError,
+			"Handler returned wrong status code got %d want %d",
+		},
 	}
 
-	// test for failure
-	json = "{\"{\"}"
-	_, err = connectors.LoginData([]byte(json))
-	if err == nil {
-		t.Errorf("The login test should fail")
+	for _, tt := range tests {
+		logger.Info(fmt.Sprintf("%s : \n", tt.Name))
+		connectors = NewTestClients(tt.FileName, tt.Want)
+		switch tt.Handler {
+		case "LoginData":
+			_, err = connectors.LoginData([]byte(tt.Payload))
+		case "AllData":
+			_, err = connectors.AllData([]byte(tt.Payload))
+		}
+		if err != nil && tt.Want == 200 {
+			t.Errorf(tt.errorMsg, 200, 500)
+		}
+		if err == nil && tt.Want == 500 {
+			t.Errorf(tt.errorMsg, 500, 200)
+		}
 	}
-
-	// test for failure
-	json = "{\"user\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"pass\":\"TFMxNyA5QVQ=\"}"
-	_, err = connectors.LoginData([]byte(json))
-	if err == nil {
-		t.Errorf("The login test should fail")
-	}
-
-	// test for failure
-	connectors = NewTestClients("tests/config-errors.json", 200)
-	json = "{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMQVQ=\"}"
-	_, err = connectors.LoginData([]byte(json))
-	if err == nil {
-		t.Errorf("The login test should fail")
-	}
-
-	// test for pass
-	connectors = NewTestClients("tests/payload-example.json", 200)
-	json = "{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}"
-	apitoken, err = connectors.LoginData([]byte(json))
-	if err != nil {
-		t.Errorf("The login test should pass")
-	}
-
-	// test for pass
-	json = "{\"apitoken\": \"dfsfdsfdsfsdf\"}"
-	_, err = connectors.AllData([]byte(json))
-	if err != nil {
-		t.Errorf("The alldata test should pass")
-	}
-
-	// test for pass
-	json = "{\"apitoken\": \"" + apitoken + "\"}"
-	_, err = connectors.AllData([]byte(json))
-	if err != nil {
-		t.Errorf("The alldata test should pass")
-	}
-
-	// test for fail
-	json = ""
-	_, err = connectors.AllData([]byte(json))
-	if err == nil {
-		t.Errorf("The alldata test should fail")
-	}
-
-	// test for fail
-	json = "{\"{\": \"}\"}"
-	_, err = connectors.AllData([]byte(json))
-	if err == nil {
-		t.Errorf("The alldata test should fail")
-	}
-
-	_, err = connectors.AllDataByCustomerNumber("")
-	if err == nil {
-		t.Errorf("The alldatabycustomernumber test should fail")
-	}
-
-	// should pass
-	_, err = connectors.AllDataByCustomerNumber("000002096234")
-	if err != nil {
-		t.Errorf("The alldatabycustomernumber test should pass")
-	}
-
 }

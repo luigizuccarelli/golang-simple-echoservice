@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -29,7 +28,7 @@ func TestAllMiddleware(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"Test [Isalive] should pass",
+			"[TEST] IsAlive should pass",
 			"GET", "/v1/sys/info/isalive",
 			"",
 			"IsAlive",
@@ -38,7 +37,26 @@ func TestAllMiddleware(t *testing.T) {
 			"Handler returned wrong status code got %d want %d",
 		},
 		{
-			"Test [MiddlewareLogin] should pass",
+			"[TEST] Method [OPTIONS] should pass",
+			"OPTIONS", "/v1/sys/info/isalive",
+			"",
+			"IsAlive",
+			"tests/payload-example.json",
+			http.StatusOK,
+			"Handler returned wrong status code got %d want %d",
+		},
+		{
+			"[TEST] MiddlewareLogin OPTIONS Method should pass",
+			"OPTIONS",
+			"/v1/login",
+			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
+			"MiddlewareLogin",
+			"tests/payload-example.json",
+			http.StatusOK,
+			"Handler returned wrong status code got %d want %d",
+		},
+		{
+			"[TEST] MiddlewareLogin should pass",
 			"POST",
 			"/v1/login",
 			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
@@ -48,27 +66,7 @@ func TestAllMiddleware(t *testing.T) {
 			"Handler returned wrong status code got %d want %d",
 		},
 		{
-			"Test [MiddlewareData] should pass",
-			"POST",
-			"/v1/alldata",
-			"{\"apitoken\": \"\"}",
-			"MiddlewareData",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"Test [MiddlewareCustomerNumberData] should pass",
-			"GET",
-			"/v2/postaladdress/customernumber/000002096234",
-			"",
-			"MiddlewareCustomerNumberData",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"Test [MiddlewareLogin] should fail",
+			"[TEST] MiddlewareLogin should fail",
 			"POST",
 			"/v1/login",
 			"{\"user\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"pass\":\"TFMxNyA5QVQ=\"}",
@@ -78,21 +76,33 @@ func TestAllMiddleware(t *testing.T) {
 			"Handler returned wrong status code got %d want %d",
 		},
 		{
-			"Test [MiddlewareData] should fail",
+			"[TEST] MiddlewareLogin OPTIONS Method should pass",
+			"OPTIONS",
+			"/v1/alldata",
+			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
+			"MiddlewareData",
+			"tests/payload-example.json",
+			http.StatusOK,
+			"Handler returned wrong status code got %d want %d",
+		},
+
+		{
+			"[TEST] MiddlewareData should pass",
 			"POST",
 			"/v1/alldata",
 			"{\"apitoken\": \"\"}",
-			"MiddlewareLogin",
+			"MiddlewareData",
 			"tests/payload-example.json",
-			http.StatusInternalServerError,
+			http.StatusOK,
 			"Handler returned wrong status code got %d want %d",
 		},
+
 		{
-			"Test [MiddlewareCustomerNumberData] should fail",
-			"GET",
-			"/v2/postaladdress/customernumber/00000",
-			"",
-			"MiddlewareCustomerNumberData",
+			"[TEST] MiddlewareData should fail",
+			"POST",
+			"/v1/alldata",
+			"{\"api\": \"bkm7qcv170hriaoeqru0\"}",
+			"MiddlewareData",
 			"tests/payload-example.json",
 			http.StatusInternalServerError,
 			"Handler returned wrong status code got %d want %d",
@@ -100,7 +110,7 @@ func TestAllMiddleware(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		fmt.Printf("Executing test : %s \n", tt.Name)
+		logger.Info(fmt.Sprintf("%s : \n", tt.Name))
 		if tt.Payload == "" {
 			req, _ = http.NewRequest(tt.Method, tt.Url, nil)
 		} else {
@@ -124,10 +134,6 @@ func TestAllMiddleware(t *testing.T) {
 		case "MiddlewareData":
 			handler := http.HandlerFunc(MiddlewareData)
 			handler.ServeHTTP(rr, req)
-		case "MiddlewareCustomerNumberData":
-			router := mux.NewRouter()
-			router.HandleFunc("/v2/postaladdress/customernumber/{customernumber}", MiddlewareCustomerNumberData)
-			router.ServeHTTP(rr, req)
 		}
 		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 		// directly and pass in our Request and ResponseRecorder.

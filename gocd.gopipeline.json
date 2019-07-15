@@ -1,0 +1,237 @@
+{
+  "format_version" : 1,
+  "label_template": "${COUNT}",
+  "enable_pipeline_locking": false,
+  "name": "myportfolio-middlewareinterface",
+  "group" : "devops",
+  "tracking_tool": null,
+  "timer": null,
+  "environment_variables": [],
+  "materials": [
+    {
+      "type": "git",
+      "url": "https://gitea-ci-cd.apps.balt1.okd.14west.io/lzuccarelli/golang-simple-microservice.git",
+      "destination": null,
+      "filter": null,
+      "name": "scm",
+      "auto_update": true,
+      "branch": "master",
+      "submodule_folder": null
+    }
+  ],
+  "stages": [
+    {
+      "name": "checkout_scm",
+      "fetch_materials": true,
+      "clean_working_directory": false,
+      "never_cleanup_artifacts": false,
+      "approval": null,
+      "environment_variables": [],
+      "jobs": [
+        {
+          "name": "scm_exec",
+          "run_instance_count": null,
+          "timeout": 0,
+          "environment_variables": [],
+          "resources": null, 
+          "tasks": [
+            {
+              "type": "exec",
+              "on_cancel": {
+                "type": "exec",
+                "command": "ls",
+                "working_directory": null
+              },
+              "command": "echo",
+              "arguments": [
+                "checkout latest from master"
+              ],
+              "working_directory": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "compile",
+      "fetch_materials": false,
+      "clean_working_directory": false,
+      "never_cleanup_artifacts": false,
+      "approval": null,
+      "environment_variables": [],
+      "jobs": [
+        {
+          "name": "compile_exec",
+          "run_instance_count": null,
+          "timeout": 0,
+          "environment_variables": [],
+          "resources": null, 
+          "tasks": [
+            {
+              "type": "exec",
+              "command": "echo",
+              "arguments": [
+                "Executing golang compile"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
+                "get",
+                "github.com/gorilla/mux"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
+                "get",
+                "github.com/microlib/simple"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
+                "get",
+                "github.com/go-redis/redis"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
+                "get",
+                "github.com/imdario/mergo"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
+                "get",
+                "gopkg.in/mgo.v2"
+              ],
+              "working_directory": null
+            },
+            ,
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
+                "build",
+                "-o",
+                "bin/microservice",
+                "."
+              ],
+              "working_directory": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "fetch_materials": false,
+      "clean_working_directory": false,
+      "never_cleanup_artifacts": false,
+      "approval": null,
+      "environment_variables": [],
+      "jobs": [
+        {
+          "name": "test_exec",
+          "run_instance_count": null,
+          "timeout": 0,
+          "environment_variables": [],
+          "resources": null, 
+          "tasks": [
+            {
+              "type": "exec",
+              "command": "echo",
+              "arguments": [
+                "Executing golang unit tests"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
+                "test",
+                "-v",
+                "config.go",
+                "config_test.go",
+                "schema.go",
+                "handlers.go",
+                "handlers_test.go",
+                "middleware.go",
+                "middleware_test.go",
+                "-coverprofile"
+                "tests/results/cover.out"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
+                "tool",
+                "cover",
+                "-html=tests/results/cover.out",
+                "-o",
+                "tests/results/cover.html"
+              ],
+              "working_directory": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sonarqube",
+      "fetch_materials": false,
+      "clean_working_directory": false,
+      "never_cleanup_artifacts": false,
+      "approval": null,
+      "environment_variables": [],
+      "jobs": [
+        {
+          "name": "sonarqube_exec",
+          "run_instance_count": null,
+          "timeout": 0,
+          "environment_variables": [],
+          "resources": null, 
+          "tasks": [
+            {
+              "type": "exec",
+              "command": "echo",
+              "arguments": [
+                "Executing sonarqube scanner"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "/sonarqube/bin/sonar-scanner",
+              "arguments": [
+                "-Dsonar.projectKey=myportfolio-middlewareinterface",
+                "-Dsonar.sources=.",
+                "-Dsonar.host.url=https://sonarqube-ci-cd.apps.balt1.okd.14west.io",
+                "-Dsonar.login=d0116ebd78001393a17903f19821db18ccc4737a",
+                "-Dsonar.go.coverage.reportPaths=tests/results/cover.out",
+                "-Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,tests/**"
+              ],
+              "working_directory": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

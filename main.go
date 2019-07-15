@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/microlib/simple"
 	"net/http"
@@ -12,34 +11,29 @@ import (
 
 var (
 	logger     simple.Logger
-	config     Config
 	connectors Clients
 )
 
-func startHttpServer(cfg Config) *http.Server {
+func startHttpServer() *http.Server {
 
-	config = cfg
-
-	logger.Debug(fmt.Sprintf("Config in startServer %v ", cfg))
-	srv := &http.Server{Addr: ":" + cfg.Port}
+	srv := &http.Server{Addr: ":" + os.Getenv("PORT")}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/api/v1/sys/info/isalive", IsAlive).Methods("GET")
-	r.HandleFunc("/api/v1/login", MiddlewareLogin).Methods("POST")
-	r.HandleFunc("/api/v1/alldata", MiddlewareData).Methods("POST")
-	r.HandleFunc("/api/v2/postaladdress/customernumber/{customerNumber}", MiddlewareCustomerNumberData).Methods("GET")
+	r.HandleFunc("/api/v1/sys/info/isalive", IsAlive).Methods("GET", "OPTIONS")
+	r.HandleFunc("/api/v1/login", MiddlewareLogin).Methods("POST", "OPTIONS")
+	r.HandleFunc("/api/v1/alldata", MiddlewareData).Methods("POST", "OPTIONS")
 	http.Handle("/", r)
 
 	connectionData := ConnectionData{
 		Name:          "RealConnector",
-		RedisHost:     cfg.RedisDB.Host,
-		RedisPort:     cfg.RedisDB.Port,
-		HttpUrl:       cfg.Url,
-		MongoHost:     cfg.MongoDB.Host,
-		MongoPort:     cfg.MongoDB.Port,
-		MongoDatabase: cfg.MongoDB.DatabaseName,
-		MongoUser:     cfg.MongoDB.User,
-		MongoPassword: cfg.MongoDB.Password,
+		RedisHost:     os.Getenv("REDIS_HOST"),
+		RedisPort:     os.Getenv("REDIS_PORT"),
+		HttpUrl:       os.Getenv("URL"),
+		MongoHost:     os.Getenv("MONGO_HOST"),
+		MongoPort:     os.Getenv("MONGO_PORT"),
+		MongoDatabase: os.Getenv("MONGO_DATABASE"),
+		MongoUser:     os.Getenv("MONGO_USER"),
+		MongoPassword: os.Getenv("MONGO_PWD"),
 	}
 
 	connectors = NewClientConnectors(connectionData)
@@ -54,11 +48,10 @@ func startHttpServer(cfg Config) *http.Server {
 }
 
 func main() {
-	// read the config
-	config, _ := Init("config.json")
-	logger.Level = config.Level
-	srv := startHttpServer(config)
-	logger.Info("Starting server on port " + config.Port)
+	// read the log level
+	logger.Level = os.Getenv("LOG_LEVEL")
+	srv := startHttpServer()
+	logger.Info("Starting server on port " + os.Getenv("PORT"))
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 

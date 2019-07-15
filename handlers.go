@@ -8,6 +8,7 @@ import (
 	"github.com/rs/xid"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -36,14 +37,8 @@ func (c Connectors) LoginData(body []byte) (string, error) {
 	}
 	logger.Debug(fmt.Sprintf("json data %v\n", j))
 
-	// use this for cors
-	//res.setHeader("Access-Control-Allow-Origin", "*")
-	//res.setHeader("Access-Control-Allow-Methods", "POST")
-	//res.setHeader("Access-Control-Allow-Headers", "accept, content-type")
-
 	// lets first check in the in-memory cache
 	key := j[USERNAME].(string) + ":" + j[PASSWORD].(string)
-	//h := sha256.New()
 	hashkey := sha256.Sum256([]byte(key))
 	val, err := c.Get("hash")
 	var newval [32]byte
@@ -52,10 +47,10 @@ func (c Connectors) LoginData(body []byte) (string, error) {
 	if val == "" || err != nil {
 		logger.Info(fmt.Sprintf("Key not found in cache %s", key))
 
-		req, err := http.NewRequest("GET", config.Url+"/username/"+j[USERNAME].(string)+"/password/"+j[PASSWORD].(string), nil)
-		req.Header.Set("token", config.Token)
+		req, err := http.NewRequest("GET", os.Getenv("URL")+"/username/"+j[USERNAME].(string)+"/password/"+j[PASSWORD].(string), nil)
+		req.Header.Set("token", os.Getenv("TOKEN"))
 		resp, err := c.Http.Do(req)
-		logger.Info(fmt.Sprintf("Connected to host %s", config.Url))
+		logger.Info(fmt.Sprintf("Connected to host %s", os.Getenv("URL")))
 		if err != nil || resp.StatusCode != 200 {
 			logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
 			return apitoken, err
@@ -66,23 +61,19 @@ func (c Connectors) LoginData(body []byte) (string, error) {
 			logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
 			return apitoken, err
 		}
-		logger.Trace(fmt.Sprintf("Response from MW %s", string(body)))
 
 		errs := json.Unmarshal(body, &schema)
 		if errs != nil {
 			logger.Error(fmt.Sprintf(ERRMSGFORMAT, errs.Error()))
 			return apitoken, errs
 		}
-		logger.Debug(fmt.Sprintf("Schema Data %v ", schema))
 
-		//all, _ := json.MarshalIndent(schema, "", "	")
+		logger.Debug(fmt.Sprintf("Response from MW call %s", string(body)))
 		_, err = c.Set("all", string(body), time.Hour)
 		_, err = c.Set("hash", string(hashkey[:32]), time.Hour)
-		_, err = c.Set(schema.Accounts[0].CustomerNumber, string(body), time.Hour)
-		_, err = c.Set(schema.PostalAddresses[0].EmailAddress.EmailAddress, string(body), time.Hour)
-		logger.Info(fmt.Sprintf("CustomerNumber %s", schema.Accounts[0].CustomerNumber))
 
 		if err != nil {
+			logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
 			return apitoken, err
 		}
 
@@ -112,7 +103,7 @@ func (c Connectors) AllData(b []byte) ([]byte, error) {
 		logger.Error(fmt.Sprintf("AllData %v\n", e.Error()))
 		return subs, e
 	}
-	logger.Debug(fmt.Sprintf("json data %v\n", j))
+	logger.Debug(fmt.Sprintf("Function AllData json data %v\n", j))
 
 	// lets first check in the in-memory cache
 	if j[APITOKEN] == nil {
@@ -120,34 +111,16 @@ func (c Connectors) AllData(b []byte) ([]byte, error) {
 	}
 	apitoken := j[APITOKEN].(string)
 	val, err := c.Get(APITOKEN)
-	logger.Info(fmt.Sprintf("Apitoken from cache %s : from req object %s", val, apitoken))
-	if apitoken != val || err != nil {
+	logger.Trace(fmt.Sprintf("Function AllData : apitoken from cache %s : from req object %s", val, apitoken))
+	if err != nil {
+		logger.Error(fmt.Sprintf("Function AllData : error object %s ", err.Error()))
 		return subs, err
 	} else {
 		data, e = c.Get("all")
+		logger.Debug(fmt.Sprintf("Function AllData data from cache %s", data))
 		if e != nil {
+			logger.Error(fmt.Sprintf("Function AllData : error object %s ", e.Error()))
 			return subs, e
-		}
-	}
-	subs = []byte(data)
-	return subs, nil
-}
-
-func (c Connectors) AllDataByCustomerNumber(customernumber string) ([]byte, error) {
-
-	logger.Trace("In function AllDataByCustomerNumber")
-
-	var subs []byte
-	var data string
-
-	// lets first check in the in-memory cache
-	val, err := c.Get(customernumber)
-	if val == "" {
-		return subs, errors.New(fmt.Sprintf("CustomerNumber %s not found ", customernumber))
-	} else {
-		data, err = c.Get("all")
-		if err != nil {
-			return subs, err
 		}
 	}
 	subs = []byte(data)

@@ -1,6 +1,6 @@
-# Porfoliotracker middleware interface golang microservice
+# MyPorfolio middleware interface golang microservice
 
-A simple golang microservice with minimal json config.
+A simple golang microservice that interfaces with the middleware api.
 
 ## Coverage Info
 
@@ -17,7 +17,7 @@ $ go build -o bin/microservice .
 ## Docker build
 
 ```bash
-docker build -t <your-registry-id>/portfoliotracker-middlewareinterface:1.11.0 .
+docker build -t <your-registry-id>/myportfolio-middlewareinterface:1.11.0 .
 
 ```
 
@@ -35,7 +35,7 @@ GOCACHE=off go test -v config.go config_test.go schema.go handlers.go middleware
 go tool cover -html=tests/results/cover.out -o tests/results/cover.html
 # run sonarqube scanner (assuming sonarqube server is running)
 # NB the SonarQube host and login will differ - please update it accordingly 
- ~/Programs/sonar-scanner-3.3.0.1492-linux/bin/sonar-scanner  -Dsonar.projectKey=portfoliotracker-middlewareinterface  -Dsonar.sources=.   -Dsonar.host.url=http://localhost:9009   -Dsonar.login=3b172e408d048820bc6a633b1c3f0097523e89f4 -Dsonar.go.coverage.reportPaths=tests/results/cover.out -Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,tests/**
+ ~/Programs/sonar-scanner-3.3.0.1492-linux/bin/sonar-scanner  -Dsonar.projectKey=myportfolio-middlewareinterface  -Dsonar.sources=.   -Dsonar.host.url=http://<add-host-here>   -Dsonar.login=<add-login-token-here> -Dsonar.go.coverage.reportPaths=tests/results/cover.out -Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,tests/**
 
 ```
 ## Testing container 

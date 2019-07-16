@@ -15,6 +15,6 @@
     "82f55741-f275-49c4-9274-982b0718296f"
   ],
   "pipelines": [
-    "simple-microservice"
+    "myportfolio-middlewareinterface"
   ]
 }

@@ -164,8 +164,6 @@
               "arguments": [
                 "test",
                 "-v",
-                "config.go",
-                "config_test.go",
                 "schema.go",
                 "handlers.go",
                 "handlers_test.go",

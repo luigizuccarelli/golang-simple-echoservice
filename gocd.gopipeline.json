@@ -124,6 +124,15 @@
               "type": "exec",
               "command": "go",
               "arguments": [
+                "get",
+                "github.com/rs/xid"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
                 "build",
                 "-o",
                 "bin/microservice",

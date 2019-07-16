@@ -134,7 +134,7 @@
               "command": "go",
               "arguments": [
                 "get",
-                "code.google.com/p/go.tools/cmd/cover"
+                "golang.org/x/tools/cmd/cover"
               ],
               "working_directory": null
             },
@@ -143,7 +143,7 @@
               "command": "go",
               "arguments": [
                 "get",
-                " github.com/t-yuki/gocover-cobertura"
+                "github.com/t-yuki/gocover-cobertura"
               ],
               "working_directory": null
             },

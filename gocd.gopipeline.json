@@ -203,9 +203,8 @@
             },
             {
               "type": "exec",
-              "command": "go",
+              "command": "gocover-cobertura",
               "arguments": [
-                "gocover-cobertura",
                 "<",
                 "coverage.out",
                 ">", 

@@ -229,7 +229,7 @@
                 "-Dsonar.projectKey=myportfolio-middlewareinterface",
                 "-Dsonar.sources=.",
                 "-Dsonar.host.url=https://sonarqube-ci-cd.apps.balt1.okd.14west.io",
-                "-Dsonar.login=d0116ebd78001393a17903f19821db18ccc4737a",
+                "-Dsonar.login=f90f796201b3ffe04eb5c983b53b4f55a6a63626",
                 "-Dsonar.go.coverage.reportPaths=tests/results/cover.out",
                 "-Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,tests/**"
               ],

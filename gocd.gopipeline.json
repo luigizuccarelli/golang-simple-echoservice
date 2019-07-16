@@ -10,7 +10,7 @@
   "materials": [
     {
       "type": "git",
-      "url": "https://gitea-ci-cd.apps.balt1.okd.14west.io/lzuccarelli/golang-simple-microservice.git",
+      "url": "https://gitea-ci-cd.apps.balt1.okd.14west.io/lzuccarelli/myportfolio-middlewareinterface.git",
       "destination": null,
       "filter": null,
       "name": "scm",

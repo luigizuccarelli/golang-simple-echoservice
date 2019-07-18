@@ -133,24 +133,6 @@
               "type": "exec",
               "command": "go",
               "arguments": [
-                "get",
-                "golang.org/x/tools/cmd/cover"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "go",
-              "arguments": [
-                "get",
-                "github.com/t-yuki/gocover-cobertura"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "go",
-              "arguments": [
                 "build",
                 "-o",
                 "bin/microservice",
@@ -198,17 +180,6 @@
                 "middleware_test.go",
                 "-coverprofile",
                 "results/cover.out"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "gocover-cobertura",
-              "arguments": [
-                "<",
-                "coverage.out",
-                ">", 
-                "coverage.xml"
               ],
               "working_directory": null
             }

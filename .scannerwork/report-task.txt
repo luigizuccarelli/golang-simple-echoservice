@@ -1,0 +1,6 @@
+projectKey=myportfolio-middlewareinterface
+serverUrl=https://sonarqube-ci-cd.apps.balt1.okd.14west.io
+serverVersion=6.7.1.35068
+dashboardUrl=https://sonarqube-ci-cd.apps.balt1.okd.14west.io/dashboard/index/myportfolio-middlewareinterface
+ceTaskId=AWwELOipXmuS6bUAfo-R
+ceTaskUrl=https://sonarqube-ci-cd.apps.balt1.okd.14west.io/api/ce/task?id=AWwELOipXmuS6bUAfo-R

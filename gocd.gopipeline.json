@@ -197,7 +197,7 @@
                 "middleware.go",
                 "middleware_test.go",
                 "-coverprofile",
-                "coverage.out"
+                "results/cover.out"
               ],
               "working_directory": null
             },
@@ -245,12 +245,11 @@
               "arguments": [
                 "-Dsonar.projectKey=myportfolio-middlewareinterface",
                 "-Dsonar.sources=.",
+                "-Dsonar.language=go",
                 "-Dsonar.host.url=https://sonarqube-ci-cd.apps.balt1.okd.14west.io",
-                "-Dsonar.login=f90f796201b3ffe04eb5c983b53b4f55a6a63626",
-                "-Dsonar.coverage.reportPath=coverage.xml",
-                "-Dsonar.coverage.dtdVerification=false",
-                "-Dsonar.golint.reportPath=report.xml",
-                "-Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,tests/**"
+                "-Dsonar.login=67618387e8714f9d4ef609045f077e0c8187fdd0",
+                "-Dsonar.go.coverage.reportPaths=results/cover.out",
+                "-Dsonar.exclusions=**/*_test.go,**/vendor/**,**/.git/**,**/img/**,**/tests/**,**/results/**,**/bin/**,main.go,connectors.go,*.xml,*.txt,*.json,*.yml,*.md,Dockerfile"
               ],
               "working_directory": null
             }

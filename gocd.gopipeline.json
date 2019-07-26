@@ -224,7 +224,7 @@
                 "-Dsonar.sources=.",
                 "-Dsonar.language=go",
                 "-Dsonar.host.url=https://sonarqube-ci-cd.apps.balt1.okd.14west.io",
-                "-Dsonar.login=67618387e8714f9d4ef609045f077e0c8187fdd0",
+                "-Dsonar.login=${SONARQUBE_TOKEN}",
                 "-Dsonar.go.coverage.reportPaths=results/cover.out",
                 "-Dsonar.exclusions=**/*_test.go,**/vendor/**,**/.git/**,**/img/**,**/tests/**,**/results/**,**/bin/**,main.go,connectors.go,*.xml,*.txt,*.json,*.yml,*.md,Dockerfile"
               ],
@@ -266,6 +266,5 @@
         }
       ]
     }
-
   ]
 }

@@ -28,9 +28,15 @@ then
   exit -1
 fi
 
-if [ -z ${OC_TOKEN} ]; 
+if [ -z ${OC_USER} ]; 
 then
-  echo -e "\033[0;91mOC_TOKEN envar is not set please set it in the environments tab (secure envar) in GOCD\033[0m"
+  echo -e "\033[0;91mOC_USER envar is not set please set it in the environments tab (secure envar) in GOCD\033[0m"
+  exit -1
+fi
+
+if [ -z ${OC_PASSWORD} ]; 
+then
+  echo -e "\033[0;91mOC_PASSWORD envar is not set please set it in the environments tab (secure envar) in GOCD\033[0m"
   exit -1
 fi
 
@@ -58,7 +64,7 @@ echo "GOCD pipeline label   ${GO_PIPELINE_LABEL}"
 echo -e " " 
 
 # first login
-oc login ${MASTER_URL} -n ci-cd --token=${OC_TOKEN} --insecure-skip-tls-verify
+oc login ${MASTER_URL} --username=${OC_USER} --password=${OC_PASSWORD} --insecure-skip-tls-verify -n ci-cd
 
 
 # we can now execute the job

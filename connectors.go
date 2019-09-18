@@ -27,6 +27,7 @@ type ConnectionData struct {
 	Name          string
 	RedisHost     string
 	RedisPort     string
+	RedisPassword string
 	HttpUrl       string
 	MongoHost     string
 	MongoPort     string
@@ -44,7 +45,7 @@ func NewClientConnectors(conn ConnectionData) Clients {
 		WriteTimeout: 30 * time.Second,
 		PoolSize:     10,
 		PoolTimeout:  30 * time.Second,
-		Password:     "",
+		Password:     conn.RedisPassword,
 		DB:           0,
 	})
 

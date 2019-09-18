@@ -40,13 +40,10 @@ func (c Connectors) LoginData(body []byte) (string, error) {
 	// lets first check in the in-memory cache
 	key := j[USERNAME].(string) + ":" + j[PASSWORD].(string)
 	hashkey := sha256.Sum256([]byte(key))
-	val, err := c.Get("hash")
-	var newval [32]byte
-	copy(newval[:], []byte(val))
-	logger.Debug(fmt.Sprintf("Keys %x : %x", string(hashkey[:32]), val))
+	val, err := c.Get(string(hashkey[:32]))
+	logger.Debug(fmt.Sprintf("Key %x ", string(hashkey[:32])))
 	if val == "" || err != nil {
 		logger.Info(fmt.Sprintf("Key not found in cache %s", key))
-
 		req, err := http.NewRequest("GET", os.Getenv("URL")+"/username/"+j[USERNAME].(string)+"/password/"+j[PASSWORD].(string), nil)
 		req.Header.Set("token", os.Getenv("TOKEN"))
 		resp, err := c.Http.Do(req)
@@ -69,8 +66,7 @@ func (c Connectors) LoginData(body []byte) (string, error) {
 		}
 
 		logger.Debug(fmt.Sprintf("Response from MW call %s", string(body)))
-		_, err = c.Set("all", string(body), time.Hour)
-		_, err = c.Set("hash", string(hashkey[:32]), time.Hour)
+		_, err = c.Set(string(hashkey[:32]), string(body), time.Hour)
 
 		if err != nil {
 			logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
@@ -79,10 +75,7 @@ func (c Connectors) LoginData(body []byte) (string, error) {
 
 		apitoken = xid.New().String()
 		_, err = c.Set(APITOKEN, apitoken, time.Hour)
-	} else if newval != hashkey {
-		logger.Error(fmt.Sprintf("Hash token's don't match %s != %s", val, key))
-		return apitoken, errors.New("hash token does not match")
-	} else if hashkey == newval {
+	} else {
 		logger.Info(fmt.Sprintf("Key found in cache %s", key))
 		apitoken = xid.New().String()
 		_, err = c.Set(APITOKEN, apitoken, time.Hour)

@@ -16,10 +16,9 @@ RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
 
 ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
-COPY bin/* /go/
+COPY microservice uid_entrypoint.sh /go/ 
 
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 0755 "$GOPATH"
-RUN echo "52.203.102.189 www.alphavantage.co" >> /etc/hosts
 WORKDIR $GOPATH
 
 USER 1001

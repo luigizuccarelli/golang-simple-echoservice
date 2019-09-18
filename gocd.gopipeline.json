@@ -16,7 +16,7 @@
   "materials": [
     {
       "type": "git",
-      "url": "https://lzuccarelli@stash.pubsvs.com/scm/threefold/myportfolio-middlewareinterface.git",
+      "url": "https://stash.pubsvs.com/scm/threefold/myportfolio-middlewareinterface.git",
       "destination": null,
       "filter": null,
       "name": "scm",

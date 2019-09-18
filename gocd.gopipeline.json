@@ -16,7 +16,7 @@
   "materials": [
     {
       "type": "git",
-      "url": "https://gitea-ci-cd.apps.balt1.okd.14west.io/lzuccarelli/myportfolio-middlewareinterface.git",
+      "url": "https://lzuccarelli@stash.pubsvs.com/scm/threefold/myportfolio-middlewareinterface.git",
       "destination": null,
       "filter": null,
       "name": "scm",
@@ -170,6 +170,15 @@
               "command": "echo",
               "arguments": [
                 "Executing golang unit tests"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "go",
+              "arguments": [
+                "clean",
+                "--testcache"
               ],
               "working_directory": null
             },

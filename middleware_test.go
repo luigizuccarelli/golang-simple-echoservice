@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -14,7 +13,6 @@ import (
 func TestAllMiddleware(t *testing.T) {
 	var req *http.Request
 	var token string = ""
-	var response Response
 
 	// create anonymous struct
 	tests := []struct {
@@ -24,8 +22,8 @@ func TestAllMiddleware(t *testing.T) {
 		Payload  string
 		Handler  string
 		FileName string
-		want     int
-		errorMsg string
+		Want     int
+		ErrorMsg string
 	}{
 		{
 			"[TEST] IsAlive should pass",
@@ -87,24 +85,24 @@ func TestAllMiddleware(t *testing.T) {
 		},
 
 		{
-			"[TEST] MiddlewareData should pass",
-			"POST",
-			"/v1/alldata",
-			"{\"apitoken\": \"\"}",
-			"MiddlewareData",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-
-		{
-			"[TEST] MiddlewareData should fail",
+			"[TEST] MiddlewareData should fail (invalid token)",
 			"POST",
 			"/v1/alldata",
 			"{\"api\": \"bkm7qcv170hriaoeqru0\"}",
 			"MiddlewareData",
 			"tests/payload-example.json",
 			http.StatusInternalServerError,
+			"Handler returned wrong status code got %d want %d",
+		},
+
+		{
+			"[TEST] MiddlewareData should pass",
+			"POST",
+			"/v1/alldata",
+			"{\"apitoken\": \"bkm7qcv170hriaoeqru0\"}",
+			"MiddlewareData",
+			"tests/payload-example.json",
+			http.StatusOK,
 			"Handler returned wrong status code got %d want %d",
 		},
 	}
@@ -120,7 +118,7 @@ func TestAllMiddleware(t *testing.T) {
 			req, _ = http.NewRequest(tt.Method, tt.Url, bytes.NewBuffer([]byte(tt.Payload)))
 		}
 
-		connectors = NewTestClients(tt.FileName, tt.want)
+		connectors = NewTestClients(tt.FileName, tt.Want)
 
 		// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 		rr := httptest.NewRecorder()
@@ -137,16 +135,12 @@ func TestAllMiddleware(t *testing.T) {
 		}
 		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 		// directly and pass in our Request and ResponseRecorder.
-		body, e := ioutil.ReadAll(rr.Body)
+		_, e := ioutil.ReadAll(rr.Body)
 		if e != nil {
 			t.Fatalf("Should not fail : found error %v", e)
 		}
-		fmt.Println(fmt.Sprintf("Response %s", string(body)))
-		// ignore errors here
-		json.Unmarshal(body, &response)
-		token = response.Payload.MetaInfo
-		if rr.Code != tt.want {
-			t.Errorf(tt.errorMsg, rr.Code, http.StatusOK)
+		if rr.Code != tt.Want {
+			t.Errorf(tt.ErrorMsg, rr.Code, tt.Want)
 		}
 	}
 }

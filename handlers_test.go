@@ -114,7 +114,7 @@ func TestLoginData(t *testing.T) {
 
 	var err error
 	store = map[string]string{"hash": ""}
-	store = map[string]string{"all": ""}
+	store = map[string]string{"test": ""}
 
 	// create anonymous struct
 	tests := []struct {

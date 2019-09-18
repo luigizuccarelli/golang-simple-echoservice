@@ -67,6 +67,7 @@ func (c Connectors) LoginData(body []byte) (string, error) {
 
 		logger.Debug(fmt.Sprintf("Response from MW call %s", string(body)))
 		_, err = c.Set(string(hashkey[:32]), string(body), time.Hour)
+		_, err = c.Set("test", string(body), time.Hour)
 
 		if err != nil {
 			logger.Error(fmt.Sprintf(ERRMSGFORMAT, err.Error()))
@@ -109,7 +110,7 @@ func (c Connectors) AllData(b []byte) ([]byte, error) {
 		logger.Error(fmt.Sprintf("Function AllData : error object %s ", err.Error()))
 		return subs, err
 	} else {
-		data, e = c.Get("all")
+		data, e = c.Get("test")
 		logger.Debug(fmt.Sprintf("Function AllData data from cache %s", data))
 		if e != nil {
 			logger.Error(fmt.Sprintf("Function AllData : error object %s ", e.Error()))

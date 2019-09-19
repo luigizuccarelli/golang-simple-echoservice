@@ -16,7 +16,7 @@
   "materials": [
     {
       "type": "git",
-      "url": "https://gitea-cicd.apps.aws2-dev.ocp.14west.io/gitea/myportfolio-middlewareinterface.git",
+      "url": "https://gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/myportfolio-middlewareinterface.git",
       "destination": null,
       "filter": null,
       "name": "scm",

@@ -40,7 +40,7 @@ if [ "$1" = "sonarqube" ]
 then
     echo -e "\nSonarqube scanning project"
     /sonarqube/bin/sonar-scanner -Dsonar.projectKey=${project} -Dsonar.sources=. -Dsonar.host.url=${SONARQUBE_HOST} -Dsonar.login=${SONARQUBE_USER} -Dsonar.password=${SONARQUBE_PASSWORD} -Dsonar.go.coverage.reportPaths=tests/results/cover.out -Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,schema.go,tests/**,*.json,*.txt,*.yml,*.sh -Dsonar.issuesReport.json.enable=true -Dsonar.report.export.path=sonar-report.json -Dsonar.issuesReport.console.enable=true | tee output.txt && \
-    url=$(cat output.txt | grep -o "${SONARQUBE_HOST}/api/ce/task?id=[0-9A-Za-z_]*") && curl -k ${url} | grep -o '"status":"SUCCESS"' | grep '"status":"SUCCESS"' && echo "PASSED" && exit 0 || echo "FAILED" && exit -1
+      result=$(cat output.txt | grep -o "INFO: EXECUTION SUCCESS") && echo ${result} | grep 'INFO: EXECUTION SUCCESS' && echo "PASSED" && exit 0 || echo "FAILED" && exit -1
 fi
 
 if [ "$1" = "build-image" ]

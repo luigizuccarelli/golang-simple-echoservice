@@ -2,9 +2,13 @@
 
 A simple golang microservice that interfaces with the middleware api.
 
+## Status 
+[![Quality gate](https://sonarqube-cicd.apps.aws2-dev.ocp.14west.io/api/project_badges/quality_gate?project=myportfolio-middlewareinterface)](https://sonarqube-cicd.apps.aws2-dev.ocp.14west.io/dashboard?id=myportfolio-middlewareinterface)
+i
 ## Coverage Info
 
-![SonarQube](img/middlewareinterface-coverage.png) 
+[link](https://sonarqube-cicd.apps.aws2-dev.ocp.14west.io/dashboard?id=myportfolio-middlewareinterface)
+
 
 ## Usage 
 

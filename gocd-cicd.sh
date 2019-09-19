@@ -46,7 +46,7 @@ fi
 if [ "$1" = "build-image" ]
 then
   # first login
-  oc login ${MASTER_URL} --username=${OC_USER} --password=${OC_PASSWORD} --insecure-skip-tls-verify -n ci-cd
+  oc login ${MASTER_URL} --username=${OC_USER} --password=${OC_PASSWORD} --insecure-skip-tls-verify -n cicd
 
   # we can now execute the job
   oc create -f kaniko-job.yml

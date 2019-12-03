@@ -1,13 +1,9 @@
-# MyPorfolio middleware interface golang microservice
+# MyPorfolio auth interface golang microservice
 
-A simple golang microservice that interfaces with the middleware api.
+A simple golang microservice that interfaces api.
 
 ## Status 
-[![Quality gate](https://sonarqube-cicd.apps.aws2-dev.ocp.14west.io/api/project_badges/quality_gate?project=myportfolio-middlewareinterface)](https://sonarqube-cicd.apps.aws2-dev.ocp.14west.io/dashboard?id=myportfolio-middlewareinterface)
-
-## Coverage Info
-
-To view the current coverage info please click on the [link](https://sonarqube-cicd.apps.aws2-dev.ocp.14west.io/dashboard?id=myportfolio-middlewareinterface)
+[![Quality Gate Status](http://ec2-52-19-191-18.eu-west-1.compute.amazonaws.com/api/project_badges/measure?project=myportfolio-authinterface&metric=alert_status)](http://ec2-52-19-191-18.eu-west-1.compute.amazonaws.com/dashboard?id=myportfolio-authinterface)
 
 
 ## Usage 
@@ -21,7 +17,7 @@ $ go build -o bin/microservice .
 ## Docker build
 
 ```bash
-docker build -t <your-registry-id>/myportfolio-middlewareinterface:1.11.0 .
+docker build -t <your-registry-id>/myportfolio-authinterface:1.13.1 .
 
 ```
 
@@ -39,7 +35,7 @@ GOCACHE=off go test -v config.go config_test.go schema.go handlers.go middleware
 go tool cover -html=tests/results/cover.out -o tests/results/cover.html
 # run sonarqube scanner (assuming sonarqube server is running)
 # NB the SonarQube host and login will differ - please update it accordingly 
- ~/Programs/sonar-scanner-3.3.0.1492-linux/bin/sonar-scanner  -Dsonar.projectKey=myportfolio-middlewareinterface  -Dsonar.sources=.   -Dsonar.host.url=http://<add-host-here>   -Dsonar.login=<add-login-token-here> -Dsonar.go.coverage.reportPaths=tests/results/cover.out -Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,tests/**
+ ~/Programs/sonar-scanner-3.3.0.1492-linux/bin/sonar-scanner  -Dsonar.projectKey=myportfolio-authinterface  -Dsonar.sources=.   -Dsonar.host.url=http://<add-host-here>   -Dsonar.login=<add-login-token-here> -Dsonar.go.coverage.reportPaths=tests/results/cover.out -Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,tests/**
 
 ```
 ## Testing container 

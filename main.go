@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	logger     simple.Logger
-	connectors Clients
+	logger simple.Logger
 )
 
 func startHttpServer() *http.Server {
@@ -22,25 +21,9 @@ func startHttpServer() *http.Server {
 	srv := &http.Server{Addr: ":" + os.Getenv("SERVER_PORT")}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/api/v1/sys/info/isalive", IsAlive).Methods("GET", "OPTIONS")
-	r.HandleFunc("/api/v1/login", MiddlewareLogin).Methods("POST", "OPTIONS")
-	r.HandleFunc("/api/v1/alldata", MiddlewareData).Methods("POST", "OPTIONS")
+	r.HandleFunc("/api/v1/verify", MiddlewareAuth).Methods("GET")
+	r.HandleFunc("/api/v2/sys/info/isalive", IsAlive).Methods("GET")
 	http.Handle("/", r)
-
-	connectionData := ConnectionData{
-		Name:          "RealConnector",
-		RedisHost:     os.Getenv("REDIS_HOST"),
-		RedisPort:     os.Getenv("REDIS_PORT"),
-		RedisPassword: os.Getenv("REDIS_PASSWORD"),
-		HttpUrl:       os.Getenv("URL"),
-		MongoHost:     "",
-		MongoPort:     "",
-		MongoDatabase: "",
-		MongoUser:     "",
-		MongoPassword: "",
-	}
-
-	connectors = NewClientConnectors(connectionData)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
@@ -56,7 +39,7 @@ func main() {
 	// read the log level
 	logger.Level = os.Getenv("LOG_LEVEL")
 	srv := startHttpServer()
-	logger.Info("Starting server on port " + os.Getenv("PORT"))
+	logger.Info("Starting server on port " + os.Getenv("SERVER_PORT"))
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
@@ -107,12 +90,10 @@ func checkEnvar(item string) {
 func ValidateEnvars() {
 	items := []string{
 		"LOG_LEVEL,false",
+		"NAME,false",
 		"SERVER_PORT,true",
-		"REDIS_HOST,true",
-		"REDIS_PORT,true",
-		"REDIS_PASSWORD,true",
+		"JWT_SECRETKEY,true",
 		"VERSION,true",
-		"URL,true",
 	}
 	for x, _ := range items {
 		checkEnvar(items[x])

@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"os"
 	"strings"
@@ -14,81 +14,67 @@ const (
 	APPLICATIONJSON string = "application/json"
 )
 
-// MiddlewareLogin a http response and request wrapper for database insert
-// It takes a both response and request objects and returns void
-func MiddlewareLogin(w http.ResponseWriter, r *http.Request) {
-
-	var response Response
-	var payload SchemaInterface
-
-	addHeaders(w, r)
-	if r.Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "")
-		return
-	}
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		response = Response{StatusCode: "500", Status: "ERROR", Message: "Could not read body data (MiddlewareLogin) " + err.Error(), Payload: payload}
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	apitoken, err := connectors.LoginData(body)
-	if err != nil {
-		response = Response{StatusCode: "500", Status: "ERROR", Message: "Login error (MiddlewareLogin) " + err.Error(), Payload: payload}
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		payload = SchemaInterface{MetaInfo: apitoken}
-		response = Response{StatusCode: "200", Status: "OK", Message: "MW data successfully retrieved", Payload: payload}
-	}
-
-	b, _ := json.MarshalIndent(response, "", "	")
-	fmt.Fprintf(w, string(b))
+type Claims struct {
+	jwt.StandardClaims
 }
 
-// MiddlewareData a http response and request wrapper for database update
-// It takes a both response and request objects and returns void
-func MiddlewareData(w http.ResponseWriter, r *http.Request) {
-
+func MiddlewareAuth(w http.ResponseWriter, r *http.Request) {
 	var response Response
-	var payload SchemaInterface
 
-	addHeaders(w, r)
-	if r.Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "")
-		return
-	}
+	token := r.Header.Get(strings.ToLower("Authorization"))
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		response = Response{StatusCode: "500", Status: "ERROR", Message: "Could not read body data (MiddlewareData) " + err.Error(), Payload: payload}
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	data, err := connectors.AllData(body)
-	if err != nil {
-		response = Response{StatusCode: "500", Status: "ERROR", Message: "Subscriptions data read (MiddlewareData) " + err.Error()}
-		w.WriteHeader(http.StatusInternalServerError)
+	if token == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		response = Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: SchemaInterface{}}
 	} else {
-		e := json.Unmarshal(data, &payload)
-		if e != nil {
-			response = Response{StatusCode: "500", Status: "ERROR", Message: "Subscriptions unmarshal error (MiddlewareData) " + e.Error()}
-			w.WriteHeader(http.StatusInternalServerError)
+
+		// Remove Bearer
+		tknStr := strings.Trim(token[7:], " ")
+		logger.Debug(fmt.Sprintf("Token : %s", tknStr))
+		addHeaders(w, r)
+		handleOptions(w, r)
+
+		// Initialize a new instance of `Claims`
+		claims := &Claims{}
+
+		secret := os.Getenv("JWT_SECRETKEY")
+		logger.Trace(fmt.Sprintf("JWT SECRET : %s", secret))
+
+		var jwtKey = []byte(secret)
+
+		// Parse the JWT string and store the result in `claims`.
+		// Note that we are passing the key in this method as well. This method will return an error
+		// if the token is invalid (if it has expired according to the expiry time we set on sign in),
+		// or if the signature does not match
+		tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+
+		if err != nil {
+			if err.Error() == jwt.ErrSignatureInvalid.Error() {
+				w.WriteHeader(http.StatusUnauthorized)
+				response = Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: SchemaInterface{}}
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+				response = Response{Code: 400, StatusCode: "400", Status: "ERROR", Message: "Bad Request", Payload: SchemaInterface{}}
+			}
 		} else {
-			response = Response{StatusCode: "200", Status: "OK", Message: "MW data read successfully", Payload: payload}
+			if !tkn.Valid {
+				w.WriteHeader(http.StatusUnauthorized)
+				response = Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: SchemaInterface{}}
+			} else {
+				response = Response{Code: 200, StatusCode: "200", Status: "OK", Message: "Data uploaded succesfully", Payload: SchemaInterface{}}
+				w.WriteHeader(http.StatusOK)
+			}
 		}
 	}
-
 	b, _ := json.MarshalIndent(response, "", "	")
+	logger.Debug(fmt.Sprintf("AuthHandler response : %s", string(b)))
 	fmt.Fprintf(w, string(b))
 }
 
 func IsAlive(w http.ResponseWriter, r *http.Request) {
-	addHeaders(w, r)
-	logger.Debug(fmt.Sprintf("used to mask cc %v", r))
-	fmt.Fprintf(w, "{\"isalive\": true , \"version\": \""+os.Getenv("VERSION")+"\"}")
+	fmt.Fprintf(w, "{ \"version\" : \""+os.Getenv("VERSION")+"\" , \"name\": \"Auth\" }")
 }
 
 // headers (with cors) utility
@@ -108,4 +94,20 @@ func addHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+}
+
+// simple options handler
+func handleOptions(w http.ResponseWriter, r *http.Request) bool {
+	if r.Method == "OPTIONS" {
+		return true
+	}
+	return false
+}
+
+// simple error handler
+func handleError(w http.ResponseWriter, msg string) Response {
+	w.WriteHeader(http.StatusInternalServerError)
+	r := Response{Code: 500, StatusCode: "500", Status: "ERROR", Message: msg}
+	return r
 }

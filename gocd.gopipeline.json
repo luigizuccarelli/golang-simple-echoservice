@@ -2,7 +2,7 @@
   "format_version" : 1,
   "label_template": "${COUNT}",
   "enable_pipeline_locking": false,
-  "name": "myportfolio-middlewareinterface",
+  "name": "myportfolio-auth",
   "group" : "devops",
   "tracking_tool": null,
   "timer": null,
@@ -16,7 +16,7 @@
   "materials": [
     {
       "type": "git",
-      "url": "https://gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/myportfolio-middlewareinterface.git",
+      "url": "https://gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/myportfolio-auth.git",
       "destination": null,
       "filter": null,
       "name": "scm",
@@ -113,7 +113,7 @@
               "command": "go",
               "arguments": [
                 "get",
-                "github.com/imdario/mergo"
+                "github.com/dgrijalva/jwt-go"
               ],
               "working_directory": null
             },
@@ -122,16 +122,7 @@
               "command": "go",
               "arguments": [
                 "get",
-                "gopkg.in/mgo.v2"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "go",
-              "arguments": [
-                "get",
-                "github.com/rs/xid"
+                "github.com/globalsign/mgo/bson"
               ],
               "working_directory": null
             },

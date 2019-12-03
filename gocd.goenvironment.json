@@ -15,6 +15,6 @@
     }
   ],
   "pipelines": [
-    "myportfolio-middlewareinterface"
+    "myportfolio-auth"
   ]
 }

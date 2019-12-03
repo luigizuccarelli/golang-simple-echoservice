@@ -44,65 +44,33 @@ func TestAllMiddleware(t *testing.T) {
 			"Handler returned wrong status code got %d want %d",
 		},
 		{
-			"[TEST] MiddlewareLogin OPTIONS Method should pass",
+			"[TEST] MiddlewareAuth OPTIONS Method should pass",
 			"OPTIONS",
-			"/v1/login",
+			"/api/v1/verify",
 			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
-			"MiddlewareLogin",
+			"MiddlewareAuth",
 			"tests/payload-example.json",
 			http.StatusOK,
 			"Handler returned wrong status code got %d want %d",
 		},
 		{
-			"[TEST] MiddlewareLogin should pass",
-			"POST",
-			"/v1/login",
+			"[TEST] MiddlewareAuth should pass",
+			"GET",
+			"/api/v1/verify",
 			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
-			"MiddlewareLogin",
+			"MiddlewareAuth",
 			"tests/payload-example.json",
 			http.StatusOK,
 			"Handler returned wrong status code got %d want %d",
 		},
 		{
-			"[TEST] MiddlewareLogin should fail",
-			"POST",
-			"/v1/login",
+			"[TEST] MiddlewareAuth should fail",
+			"GET",
+			"/api/v1/verify",
 			"{\"user\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"pass\":\"TFMxNyA5QVQ=\"}",
 			"MiddlewareLogin",
 			"tests/payload-example.json",
 			http.StatusInternalServerError,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"[TEST] MiddlewareLogin OPTIONS Method should pass",
-			"OPTIONS",
-			"/v1/alldata",
-			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
-			"MiddlewareData",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-
-		{
-			"[TEST] MiddlewareData should fail (invalid token)",
-			"POST",
-			"/v1/alldata",
-			"{\"api\": \"bkm7qcv170hriaoeqru0\"}",
-			"MiddlewareData",
-			"tests/payload-example.json",
-			http.StatusInternalServerError,
-			"Handler returned wrong status code got %d want %d",
-		},
-
-		{
-			"[TEST] MiddlewareData should pass",
-			"POST",
-			"/v1/alldata",
-			"{\"apitoken\": \"bkm7qcv170hriaoeqru0\"}",
-			"MiddlewareData",
-			"tests/payload-example.json",
-			http.StatusOK,
 			"Handler returned wrong status code got %d want %d",
 		},
 	}
@@ -118,19 +86,14 @@ func TestAllMiddleware(t *testing.T) {
 			req, _ = http.NewRequest(tt.Method, tt.Url, bytes.NewBuffer([]byte(tt.Payload)))
 		}
 
-		connectors = NewTestClients(tt.FileName, tt.Want)
-
 		// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 		rr := httptest.NewRecorder()
 		switch tt.Handler {
 		case "IsAlive":
 			handler := http.HandlerFunc(IsAlive)
 			handler.ServeHTTP(rr, req)
-		case "MiddlewareLogin":
-			handler := http.HandlerFunc(MiddlewareLogin)
-			handler.ServeHTTP(rr, req)
-		case "MiddlewareData":
-			handler := http.HandlerFunc(MiddlewareData)
+		case "MiddlewareAuth":
+			handler := http.HandlerFunc(MiddlewareAuth)
 			handler.ServeHTTP(rr, req)
 		}
 		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method

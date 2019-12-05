@@ -24,7 +24,7 @@ func MiddlewareAuth(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get(strings.ToLower("Authorization"))
 
 	if token == "" {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusForbidden)
 		response = Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: SchemaInterface{}}
 	} else {
 
@@ -52,7 +52,7 @@ func MiddlewareAuth(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			if err.Error() == jwt.ErrSignatureInvalid.Error() {
-				w.WriteHeader(http.StatusUnauthorized)
+				w.WriteHeader(http.StatusForbidden)
 				response = Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: SchemaInterface{}}
 			} else {
 				w.WriteHeader(http.StatusBadRequest)
@@ -60,7 +60,7 @@ func MiddlewareAuth(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			if !tkn.Valid {
-				w.WriteHeader(http.StatusUnauthorized)
+				w.WriteHeader(http.StatusForbidden)
 				response = Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: SchemaInterface{}}
 			} else {
 				response = Response{Code: 200, StatusCode: "200", Status: "OK", Message: "Data uploaded succesfully", Payload: SchemaInterface{}}

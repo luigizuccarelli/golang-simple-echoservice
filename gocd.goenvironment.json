@@ -4,17 +4,9 @@
     {
       "name": "OC_USER",
       "value": "lzuccarelli"
-    },
-    {
-      "name": "MASTER_URL",
-      "value": "https://master.aws2-dev.ocp.14west.io"
-    },
-    {
-      "name": "SONARQUBE_HOST",
-      "value": "https://sonarqube-cicd.apps.aws2-dev.ocp.14west.io"
     }
   ],
   "pipelines": [
-    "myportfolio-auth"
+    "myportfolio-authinterface"
   ]
 }

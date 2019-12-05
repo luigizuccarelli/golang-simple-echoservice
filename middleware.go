@@ -104,10 +104,3 @@ func handleOptions(w http.ResponseWriter, r *http.Request) bool {
 	}
 	return false
 }
-
-// simple error handler
-func handleError(w http.ResponseWriter, msg string) Response {
-	w.WriteHeader(http.StatusInternalServerError)
-	r := Response{Code: 500, StatusCode: "500", Status: "ERROR", Message: msg}
-	return r
-}

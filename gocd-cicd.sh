@@ -3,9 +3,9 @@
 # All parameter fields are required for the script to execute
 
 # declare some variables
-project="myportfolio-middlewareinterface"
-jobname="kaniko-myportfolio-middlewareinterface"
-deploymentconfig="myportfolio-middlewareinterface.json"
+project="myportfolio-authinterface"
+jobname="kaniko-myportfolio-authinterface"
+deploymentconfig="myportfolio-authinterface.json"
 namespace="myportfolio"
 
 
@@ -39,7 +39,7 @@ echo -e " "
 if [ "$1" = "sonarqube" ]
 then
     echo -e "\nSonarqube scanning project"
-    /sonarqube/bin/sonar-scanner -Dsonar.projectKey=${project} -Dsonar.sources=. -Dsonar.host.url=${SONARQUBE_HOST} -Dsonar.login=${SONARQUBE_USER} -Dsonar.password=${SONARQUBE_PASSWORD} -Dsonar.go.coverage.reportPaths=tests/results/cover.out -Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,schema.go,tests/**,*.json,*.txt,*.yml,*.sh -Dsonar.issuesReport.json.enable=true -Dsonar.report.export.path=sonar-report.json -Dsonar.issuesReport.console.enable=true | tee output.txt && \
+    /sonarqube/bin/sonar-scanner -Dsonar.projectKey=${project} -Dsonar.sources=. -Dsonar.host.url=${SONARQUBE_HOST} -Dsonar.login=${SONARQUBE_USER} -Dsonar.password=${SONARQUBE_PASSWORD} -Dsonar.go.coverage.reportPaths=tests/results/cover.out -Dsonar.exclusions=vendor/**,*_test.go,main.go,connectors.go,schema.go,swaggerui/**,tests/**,*.json,*.txt,*.yml,*.sh,Dockerfile -Dsonar.issuesReport.json.enable=true -Dsonar.report.export.path=sonar-report.json -Dsonar.issuesReport.console.enable=true | tee output.txt && \
       result=$(cat output.txt | grep -o "INFO: EXECUTION SUCCESS") && echo ${result} | grep 'INFO: EXECUTION SUCCESS' && echo "PASSED" && exit 0 || echo "FAILED" && exit -1
 fi
 

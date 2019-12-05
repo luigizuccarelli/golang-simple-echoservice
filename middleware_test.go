@@ -44,33 +44,23 @@ func TestAllMiddleware(t *testing.T) {
 			"Handler returned wrong status code got %d want %d",
 		},
 		{
-			"[TEST] MiddlewareAuth OPTIONS Method should pass",
-			"OPTIONS",
-			"/api/v1/verify",
-			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
-			"MiddlewareAuth",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
-			"[TEST] MiddlewareAuth should pass",
-			"GET",
-			"/api/v1/verify",
-			"{\"username\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"password\":\"TFMxNyA5QVQ=\"}",
-			"MiddlewareAuth",
-			"tests/payload-example.json",
-			http.StatusOK,
-			"Handler returned wrong status code got %d want %d",
-		},
-		{
 			"[TEST] MiddlewareAuth should fail",
 			"GET",
 			"/api/v1/verify",
 			"{\"user\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"pass\":\"TFMxNyA5QVQ=\"}",
-			"MiddlewareLogin",
+			"MiddlewareAuth",
 			"tests/payload-example.json",
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
+			"Handler returned wrong status code got %d want %d",
+		},
+		{
+			"[TEST] MiddlewareAuth no token should fail",
+			"GET",
+			"/api/v1/verify",
+			"{\"user\": \"MTBLUlVOTkVSQFRBTEtUQUxLLk5FVA==\",\"pass\":\"TFMxNyA5QVQ=\"}",
+			"MiddlewareAuthNoToken",
+			"tests/payload-example.json",
+			http.StatusForbidden,
 			"Handler returned wrong status code got %d want %d",
 		},
 	}
@@ -93,6 +83,10 @@ func TestAllMiddleware(t *testing.T) {
 			handler := http.HandlerFunc(IsAlive)
 			handler.ServeHTTP(rr, req)
 		case "MiddlewareAuth":
+			handler := http.HandlerFunc(MiddlewareAuth)
+			req.Header.Set("Authorization", " Bearer rewrtewrewrwerwerwerwerewr")
+			handler.ServeHTTP(rr, req)
+		case "MiddlewareAuthNoToken":
 			handler := http.HandlerFunc(MiddlewareAuth)
 			handler.ServeHTTP(rr, req)
 		}

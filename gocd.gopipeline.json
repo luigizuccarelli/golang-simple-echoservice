@@ -2,7 +2,7 @@
   "format_version" : 1,
   "label_template": "${COUNT}",
   "enable_pipeline_locking": false,
-  "name": "myportfolio-auth",
+  "name": "myportfolio-authinterface",
   "group" : "devops",
   "tracking_tool": null,
   "timer": null,
@@ -16,7 +16,7 @@
   "materials": [
     {
       "type": "git",
-      "url": "https://gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/myportfolio-auth.git",
+      "url": "http://cicd:cicd01@gitea.cicd.svc.cluster.local:3000/cicd/myportfolio-authinterface.git",
       "destination": null,
       "filter": null,
       "name": "scm",
@@ -180,6 +180,8 @@
                 "test",
                 "-v",
                 "schema.go",
+                "validate.go",
+                "validate_test.go",
                 "handlers.go",
                 "handlers_test.go",
                 "middleware.go",

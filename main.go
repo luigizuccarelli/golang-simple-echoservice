@@ -1,14 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/microlib/simple"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
-	"strings"
 	"syscall"
 )
 
@@ -35,7 +32,10 @@ func startHttpServer() *http.Server {
 }
 
 func main() {
-	ValidateEnvars()
+	err := ValidateEnvars()
+	if err != nil {
+		os.Exit(-1)
+	}
 	// read the log level
 	logger.Level = os.Getenv("LOG_LEVEL")
 	srv := startHttpServer()
@@ -70,32 +70,4 @@ func main() {
 	}
 	logger.Info("Server shutdown successfully")
 	os.Exit(code)
-}
-
-func checkEnvar(item string) {
-	name := strings.Split(item, ",")[0]
-	required, _ := strconv.ParseBool(strings.Split(item, ",")[1])
-	if os.Getenv(name) == "" {
-		if required {
-			logger.Error(fmt.Sprintf("%s envar is mandatory please set it", name))
-			os.Exit(-1)
-		} else {
-			logger.Error(fmt.Sprintf("%s envar is empty please set it", name))
-		}
-	}
-}
-
-// ValidateEnvars : public call that groups all envar validations
-// These envars are set via the openshift template
-func ValidateEnvars() {
-	items := []string{
-		"LOG_LEVEL,false",
-		"NAME,false",
-		"SERVER_PORT,true",
-		"JWT_SECRETKEY,true",
-		"VERSION,true",
-	}
-	for x, _ := range items {
-		checkEnvar(items[x])
-	}
 }

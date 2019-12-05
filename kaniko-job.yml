@@ -1,21 +1,21 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: kaniko-myportfolio-auth
+  name: kaniko-myportfolio-authinterface
 spec:
   parallelism: 1    
   completions: 1    
   template:         
     metadata:
-      name: kaniko-myportfolio-auth
+      name: kaniko-myportfolio-authinterface
     spec:
       containers:
       - name: kaniko
         image: gcr.io/kaniko-project/executor:latest
         args: [
-          "--dockerfile=/godata/pipelines/myportfolio-auth/Dockerfile",
-          "--context=/godata/pipelines/myportfolio-auth",
-          "--destination=lzuccarelli/myportfolio-auth:1.13.1"
+          "--dockerfile=/godata/pipelines/myportfolio-authinterface/Dockerfile",
+          "--context=/godata/pipelines/myportfolio-authinterface",
+          "--destination=lzuccarelli/myportfolio-authinterface:1.13.1"
         ]
         volumeMounts:
         - mountPath: /godata

@@ -6,7 +6,12 @@
   "group" : "devops",
   "tracking_tool": null,
   "timer": null,
-  "environment_variables": [],
+  "environment_variables": [
+    {
+      "name": "OC_USER",
+      "value": "lzuccarelli"
+    }
+  ],
   "parameters": [
     {
       "name": "TESTING",

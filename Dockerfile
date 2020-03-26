@@ -3,6 +3,8 @@ FROM registry.access.redhat.com/ubi8/ubi-init:latest
 LABEL maintainer="lzuccarelli@tfd.ie"
 
 # gcc for cgo
+RUN dnf clean all
+RUN rm -r /var/cache/dnf
 RUN dnf install -y git gcc make && rm -rf /var/lib/apt/lists/*
 
 ENV GOLANG_VERSION 1.13.1

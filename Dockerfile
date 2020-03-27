@@ -9,7 +9,7 @@ ENV GOLANG_DOWNLOAD_SHA256 94f874037b82ea5353f4061e543681a0e79657f78743797421462
 # gcc for cgo
 RUN dnf clean all
 RUN rm -rf /var/cache/dnf
-RUN dnf remove subscription-manager && dnf install -y git gcc make && rm -rf /var/lib/apt/lists/*``
+RUN dnf remove subscription-manager && dnf install -y git gcc make && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
 	&& echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - \

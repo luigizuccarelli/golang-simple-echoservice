@@ -15,7 +15,7 @@ spec:
         args: [
           "--dockerfile=/godata/pipelines/myportfolio-authinterface/Dockerfile",
           "--context=/godata/pipelines/myportfolio-authinterface",
-          "--destination=lzuccarelli/myportfolio-authinterface:1.13.1"
+          "--destination=tfld-docker-prd-local.repo.14west.io/myportfolio-authinterface:1.13.1"
         ]
         volumeMounts:
         - mountPath: /godata
@@ -25,7 +25,7 @@ spec:
           subPath: config.json
         env:
         - name: DESITINATION
-          value: lzuccarelli/myportfolio-auth:1.13.1
+          value: tfld-docker-prd-local.repo.14west.io/myportfolio-authinterface:1.13.1
       restartPolicy: Never   
       volumes:
       - name: gocdagent-data

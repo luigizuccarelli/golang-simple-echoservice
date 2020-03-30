@@ -5,7 +5,7 @@
 # declare some variables
 PROJECT="myportfolio-authinterface"
 jobname="kaniko-myportfolio-authinterface"
-deploymentconfig="myportfolio-authinterface.json"
+deploymentconfig="authinterface"
 namespace="myportfolio"
 
 
@@ -96,12 +96,17 @@ then
   # delete the job
   oc delete job/"${jobname}" 
 
+  # This only applies to a UAT server
+  # We use a different workflow for DEV
+  # For PROD we use a manual (Release Manager) strategy
   if [ "${AUTODEPLOY}" == "true" ];
   then
     # we assume that the project resides on the same server (master-url)
     # if not then add a new login call here first
-    oc project ${namespace}
+    oc login ${UAT_MASTER_URL} --username=${OC_USER} --password=${OC_PASSWORD} --insecure-skip-tls-verify -n ${namespace}
     oc rollout latest dc/${deploymentconfig}
+    # use oc rollout status to check your deplyment
+    # its excluded so tha the cicd process can end in a timely manner
     exit 0
   fi
 fi

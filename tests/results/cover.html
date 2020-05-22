@@ -54,9 +54,9 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">/home/lzuccarelli/Projects/myportfolio/myportfolio-authinterface/middleware.go (79.1%)</option>
+				<option value="file0">gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/handlers/handler.go (94.3%)</option>
 				
-				<option value="file1">/home/lzuccarelli/Projects/myportfolio/myportfolio-authinterface/validate.go (100.0%)</option>
+				<option value="file1">gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/validator/validate.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -70,15 +70,18 @@
 		</div>
 		<div id="content">
 		
-		<pre class="file" id="file0" style="display: none">package main
+		<pre class="file" id="file0" style="display: none">package handlers
 
 import (
         "encoding/json"
         "fmt"
-        "github.com/dgrijalva/jwt-go"
         "net/http"
         "os"
         "strings"
+
+        "gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/connectors"
+        "gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/schema"
+        "github.com/dgrijalva/jwt-go"
 )
 
 const (
@@ -90,27 +93,27 @@ type Claims struct {
         jwt.StandardClaims
 }
 
-func MiddlewareAuth(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
-        var response Response
+func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients) <span class="cov8" title="1">{
+        var response *schema.Response
 
         token := r.Header.Get(strings.ToLower("Authorization"))
+        conn.Trace("Auth Header : %s", token)
 
         if token == "" </span><span class="cov8" title="1">{
-                w.WriteHeader(http.StatusUnauthorized)
-                response = Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: SchemaInterface{}}
+                w.WriteHeader(http.StatusForbidden)
+                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: schema.SchemaInterface{}}
         }</span> else<span class="cov8" title="1"> {
 
                 // Remove Bearer
                 tknStr := strings.Trim(token[7:], " ")
-                logger.Debug(fmt.Sprintf("Token : %s", tknStr))
+                conn.Info(fmt.Sprintf("Token (trimmed) : %s", tknStr))
                 addHeaders(w, r)
-                handleOptions(w, r)
 
                 // Initialize a new instance of `Claims`
                 claims := &amp;Claims{}
 
                 secret := os.Getenv("JWT_SECRETKEY")
-                logger.Trace(fmt.Sprintf("JWT SECRET : %s", secret))
+                conn.Trace(fmt.Sprintf("JWT SECRET : %s", secret))
 
                 var jwtKey = []byte(secret)
 
@@ -118,96 +121,78 @@ func MiddlewareAuth(w http.ResponseWriter, r *http.Request) <span class="cov8" t
                 // Note that we are passing the key in this method as well. This method will return an error
                 // if the token is invalid (if it has expired according to the expiry time we set on sign in),
                 // or if the signature does not match
-                tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) </span><span class="cov0" title="0">{
+                tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) </span><span class="cov8" title="1">{
                         return jwtKey, nil
                 }</span>)
 
                 <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
-                        if err.Error() == jwt.ErrSignatureInvalid.Error() </span><span class="cov0" title="0">{
-                                w.WriteHeader(http.StatusUnauthorized)
-                                response = Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: SchemaInterface{}}
+                        if err.Error() == jwt.ErrSignatureInvalid.Error() </span><span class="cov8" title="1">{
+                                w.WriteHeader(http.StatusForbidden)
+                                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: schema.SchemaInterface{}}
                         }</span> else<span class="cov8" title="1"> {
                                 w.WriteHeader(http.StatusBadRequest)
-                                response = Response{Code: 400, StatusCode: "400", Status: "ERROR", Message: "Bad Request", Payload: SchemaInterface{}}
+                                response = &amp;schema.Response{Code: 400, StatusCode: "400", Status: "ERROR", Message: "Bad Request", Payload: schema.SchemaInterface{}}
                         }</span>
-                } else<span class="cov0" title="0"> {
+                } else<span class="cov8" title="1"> {
                         if !tkn.Valid </span><span class="cov0" title="0">{
-                                w.WriteHeader(http.StatusUnauthorized)
-                                response = Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: SchemaInterface{}}
-                        }</span> else<span class="cov0" title="0"> {
-                                response = Response{Code: 200, StatusCode: "200", Status: "OK", Message: "Data uploaded succesfully", Payload: SchemaInterface{}}
+                                w.WriteHeader(http.StatusForbidden)
+                                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: schema.SchemaInterface{}}
+                        }</span> else<span class="cov8" title="1"> {
+                                response = &amp;schema.Response{Code: 200, StatusCode: "200", Status: "OK", Message: "Data uploaded succesfully", Payload: schema.SchemaInterface{}}
                                 w.WriteHeader(http.StatusOK)
                         }</span>
                 }
         }
         <span class="cov8" title="1">b, _ := json.MarshalIndent(response, "", "        ")
-        logger.Debug(fmt.Sprintf("AuthHandler response : %s", string(b)))
+        conn.Debug(fmt.Sprintf("AuthHandler response : %s", string(b)))
         fmt.Fprintf(w, string(b))</span>
 }
 
 func IsAlive(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
-        fmt.Fprintf(w, "{ \"version\" : \""+os.Getenv("VERSION")+"\" , \"name\": \"Auth\" }")
+        fmt.Fprintf(w, "{ \"version\" : \""+os.Getenv("VERSION")+"\" , \"name\": \"AuthInterface\" }")
+        return
 }</span>
 
 // headers (with cors) utility
 func addHeaders(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
-        var request []string
-        for name, headers := range r.Header </span><span class="cov8" title="1">{
-                name = strings.ToLower(name)
-                for _, h := range headers </span><span class="cov8" title="1">{
-                        request = append(request, fmt.Sprintf("%v: %v", name, h))
-                }</span>
-        }
-
-        <span class="cov8" title="1">logger.Trace(fmt.Sprintf("Headers : %s", request))
-
         w.Header().Set(CONTENTTYPE, APPLICATIONJSON)
         // use this for cors
         w.Header().Set("Access-Control-Allow-Origin", "*")
         w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-        w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")</span>
-
-}
-
-// simple options handler
-func handleOptions(w http.ResponseWriter, r *http.Request) bool <span class="cov8" title="1">{
-        if r.Method == "OPTIONS" </span><span class="cov0" title="0">{
-                return true
-        }</span>
-        <span class="cov8" title="1">return false</span>
-}
+        w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}</span>
 </pre>
 		
-		<pre class="file" id="file1" style="display: none">package main
+		<pre class="file" id="file1" style="display: none">package validator
 
 import (
-        "errors"
         "fmt"
         "os"
         "strconv"
         "strings"
+
+        "github.com/microlib/simple"
 )
 
 // checkEnvars - private function, iterates through each item and checks the required field
-func checkEnvar(item string) error <span class="cov8" title="1">{
+func checkEnvar(item string, logger *simple.Logger) error <span class="cov8" title="1">{
         name := strings.Split(item, ",")[0]
         required, _ := strconv.ParseBool(strings.Split(item, ",")[1])
-        logger.Trace(fmt.Sprintf("name %s : required %t", name, required))
+        logger.Trace(fmt.Sprintf("Input paramaters -&gt; name %s : required %t", name, required))
         if os.Getenv(name) == "" </span><span class="cov8" title="1">{
                 if required </span><span class="cov8" title="1">{
                         logger.Error(fmt.Sprintf("%s envar is mandatory please set it", name))
-                        return errors.New(fmt.Sprintf("%s envar is mandatory please set it", name))
-                }</span> else<span class="cov8" title="1"> {
-                        logger.Error(fmt.Sprintf("%s envar is empty please set it", name))
+                        return fmt.Errorf(fmt.Sprintf("%s envar is mandatory please set it", name))
                 }</span>
+
+                <span class="cov8" title="1">logger.Error(fmt.Sprintf("%s envar is empty please set it", name))</span>
         }
         <span class="cov8" title="1">return nil</span>
 }
 
 // ValidateEnvars : public call that groups all envar validations
 // These envars are set via the openshift template
-// Each microservice will obviously have a diffefrent envars so change where needed
-func ValidateEnvars() error <span class="cov8" title="1">{
+func ValidateEnvars(logger *simple.Logger) error <span class="cov8" title="1">{
         items := []string{
                 "LOG_LEVEL,false",
                 "NAME,false",
@@ -215,8 +200,8 @@ func ValidateEnvars() error <span class="cov8" title="1">{
                 "JWT_SECRETKEY,true",
                 "VERSION,true",
         }
-        for x, _ := range items </span><span class="cov8" title="1">{
-                if err := checkEnvar(items[x]); err != nil </span><span class="cov8" title="1">{
+        for x := range items </span><span class="cov8" title="1">{
+                if err := checkEnvar(items[x], logger); err != nil </span><span class="cov8" title="1">{
                         return err
                 }</span>
         }

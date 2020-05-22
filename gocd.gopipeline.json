@@ -2,26 +2,15 @@
   "format_version" : 1,
   "label_template": "${COUNT}",
   "enable_pipeline_locking": false,
-  "name": "myportfolio-authinterface",
-  "group" : "MyPortfolio",
+  "name": "servisbot-authinterface",
+  "group" : "ServisBOT",
   "tracking_tool": null,
   "timer": null,
-  "environment_variables": [
-    {
-      "name": "OC_USER",
-      "value": "lzuccarelli"
-    }
-  ],
-  "parameters": [
-    {
-      "name": "TESTING",
-      "value": "false"
-    }
-  ],
+  "environment_variables": [],
   "materials": [
     {
       "type": "git",
-      "url": "http://cicd:cicd01@gitea.cicd.svc.cluster.local:3000/cicd/myportfolio-authinterface.git",
+      "url": "http://cicd:cicd01@gitea.cicd.svc.cluster.local:3000/cicd/servisbot-authinterface.git",
       "destination": null,
       "filter": null,
       "name": "scm",
@@ -44,7 +33,7 @@
           "run_instance_count": null,
           "timeout": 0,
           "environment_variables": [],
-          "resources": null, 
+          "resources": null,
           "tasks": [
             {
               "type": "exec",
@@ -56,89 +45,6 @@
               "command": "echo",
               "arguments": [
                 "checkout latest from master"
-              ],
-              "working_directory": null
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "compile",
-      "fetch_materials": false,
-      "clean_working_directory": false,
-      "never_cleanup_artifacts": false,
-      "approval": null,
-      "environment_variables": [],
-      "jobs": [
-        {
-          "name": "compile_exec",
-          "run_instance_count": null,
-          "timeout": 0,
-          "environment_variables": [],
-          "resources": null, 
-          "tasks": [
-            {
-              "type": "exec",
-              "command": "echo",
-              "arguments": [
-                "Executing golang compile"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "go",
-              "arguments": [
-                "get",
-                "github.com/gorilla/mux"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "go",
-              "arguments": [
-                "get",
-                "github.com/microlib/simple"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "go",
-              "arguments": [
-                "get",
-                "github.com/go-redis/redis"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "go",
-              "arguments": [
-                "get",
-                "github.com/dgrijalva/jwt-go"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "go",
-              "arguments": [
-                "get",
-                "github.com/globalsign/mgo/bson"
-              ],
-              "working_directory": null
-            },
-            {
-              "type": "exec",
-              "command": "go",
-              "arguments": [
-                "build",
-                "-o",
-                "microservice",
-                "."
               ],
               "working_directory": null
             }
@@ -159,8 +65,24 @@
           "run_instance_count": null,
           "timeout": 0,
           "environment_variables": [],
-          "resources": null, 
+          "resources": null,
           "tasks": [
+            {
+              "type": "exec",
+              "command": "echo",
+              "arguments": [
+                "Executing golang clean"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "make",
+              "arguments": [
+                "clean"
+              ],
+              "working_directory": null
+            },
             {
               "type": "exec",
               "command": "echo",
@@ -171,26 +93,60 @@
             },
             {
               "type": "exec",
-              "command": "go",
+              "command": "make",
               "arguments": [
-                "clean",
-                "--testcache"
+                "test"
+              ],
+              "working_directory": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "compile",
+      "fetch_materials": false,
+      "clean_working_directory": false,
+      "never_cleanup_artifacts": false,
+      "approval": null,
+      "environment_variables": [],
+      "jobs": [
+        {
+          "name": "compile_exec",
+          "run_instance_count": null,
+          "timeout": 0,
+          "environment_variables": [],
+          "resources": null,
+          "tasks": [
+            {
+              "type": "exec",
+              "command": "echo",
+              "arguments": [
+                "Executing golang build (compile)"
               ],
               "working_directory": null
             },
             {
               "type": "exec",
-              "command": "go",
+              "command": "make",
               "arguments": [
-                "test",
-                "-v",
-                "schema.go",
-                "validate.go",
-                "validate_test.go",
-                "middleware.go",
-                "middleware_test.go",
-                "-coverprofile",
-                "tests/results/cover.out"
+                "build"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "echo",
+              "arguments": [
+                "Executing golang cover profile"
+              ],
+              "working_directory": null
+            },
+            {
+              "type": "exec",
+              "command": "make",
+              "arguments": [
+                "cover"
               ],
               "working_directory": null
             }
@@ -211,13 +167,13 @@
           "run_instance_count": null,
           "timeout": 0,
           "environment_variables": [],
-          "resources": null, 
+          "resources": null,
           "tasks": [
             {
               "type": "exec",
               "command": "echo",
               "arguments": [
-                "Executing sonarqube scanner using gocd-cicd.sh script"
+                "Executing sonarqube scanner"
               ],
               "working_directory": null
             },
@@ -246,7 +202,7 @@
           "run_instance_count": null,
           "timeout": 0,
           "environment_variables": [],
-          "resources": null, 
+          "resources": null,
           "tasks": [
             {
               "type": "exec",
@@ -262,7 +218,6 @@
               "arguments": [
                 "build-image"
               ],
-
               "working_directory": null
             }
           ]

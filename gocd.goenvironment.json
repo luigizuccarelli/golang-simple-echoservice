@@ -1,7 +1,6 @@
 {
   "name": "dev",
-  "environment_variables": [],
   "pipelines": [
-    "myportfolio-authinterface"
+    "servisbot-authinterface"
   ]
 }

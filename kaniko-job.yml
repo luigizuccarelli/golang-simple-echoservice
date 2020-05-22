@@ -1,21 +1,21 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: kaniko-myportfolio-authinterface
+  name: kaniko-servisbot-authinterface
 spec:
   parallelism: 1    
   completions: 1    
   template:         
     metadata:
-      name: kaniko-myportfolio-authinterface
+      name: kaniko-servisbot-authinterface
     spec:
       containers:
       - name: kaniko
         image: gcr.io/kaniko-project/executor:latest
         args: [
-          "--dockerfile=/godata/pipelines/myportfolio-authinterface/Dockerfile",
-          "--context=/godata/pipelines/myportfolio-authinterface",
-          "--destination=tfld-docker-prd-local.repo.14west.io/myportfolio-authinterface:1.13.1"
+          "--dockerfile=/godata/pipelines/servisbot-authinterface/Dockerfile",
+          "--context=/godata/pipelines/servisbot-authinterface",
+          "--destination=tfld-docker-prd-local.repo.14west.io/servisbot-authinterface:1.13.1"
         ]
         volumeMounts:
         - mountPath: /godata
@@ -25,7 +25,7 @@ spec:
           subPath: config.json
         env:
         - name: DESITINATION
-          value: tfld-docker-prd-local.repo.14west.io/myportfolio-authinterface:1.13.1
+          value: tfld-docker-prd-local.repo.14west.io/servisbot-authinterface:1.13.1
       restartPolicy: Never   
       volumes:
       - name: gocdagent-data

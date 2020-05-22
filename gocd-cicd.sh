@@ -3,10 +3,10 @@
 # All parameter fields are required for the script to execute
 
 # declare some variables
-PROJECT="myportfolio-authinterface"
-jobname="kaniko-myportfolio-authinterface"
+PROJECT="servisbot-authinterface"
+jobname="kaniko-servisbot-authinterface"
 deploymentconfig="authinterface"
-namespace="myportfolio"
+namespace="servisbot"
 
 
 # some variable checks

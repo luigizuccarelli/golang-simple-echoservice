@@ -15,6 +15,7 @@ import (
 const (
 	CONTENTTYPE     string = "Content-Type"
 	APPLICATIONJSON string = "application/json"
+	FORBIDDEN       string = "Forbidden"
 )
 
 type Claims struct {
@@ -29,7 +30,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
 
 	if token == "" {
 		w.WriteHeader(http.StatusForbidden)
-		response = &schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: schema.SchemaInterface{}}
+		response = &schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: FORBIDDEN, Payload: schema.SchemaInterface{}}
 	} else {
 
 		// Remove Bearer
@@ -56,7 +57,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
 		if err != nil {
 			if err.Error() == jwt.ErrSignatureInvalid.Error() {
 				w.WriteHeader(http.StatusForbidden)
-				response = &schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: schema.SchemaInterface{}}
+				response = &schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: FORBIDDEN, Payload: schema.SchemaInterface{}}
 			} else {
 				w.WriteHeader(http.StatusBadRequest)
 				response = &schema.Response{Code: 400, StatusCode: "400", Status: "ERROR", Message: "Bad Request", Payload: schema.SchemaInterface{}}
@@ -64,9 +65,9 @@ func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
 		} else {
 			if !tkn.Valid {
 				w.WriteHeader(http.StatusForbidden)
-				response = &schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: schema.SchemaInterface{}}
+				response = &schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: FORBIDDEN, Payload: schema.SchemaInterface{}}
 			} else {
-				response = &schema.Response{Code: 200, StatusCode: "200", Status: "OK", Message: "Data uploaded succesfully", Payload: schema.SchemaInterface{}}
+				response = &schema.Response{Code: 200, StatusCode: "200", Status: "OK", Message: "Access granted", Payload: schema.SchemaInterface{}}
 				w.WriteHeader(http.StatusOK)
 			}
 		}
@@ -77,12 +78,16 @@ func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
 }
 
 func IsAlive(w http.ResponseWriter, r *http.Request) {
+	addHeaders(w, r)
 	fmt.Fprintf(w, "{ \"version\" : \""+os.Getenv("VERSION")+"\" , \"name\": \"AuthInterface\" }")
 	return
 }
 
 // headers (with cors) utility
 func addHeaders(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("API-KEY") != "" {
+		w.Header().Set("API_KEY_PT", r.Header.Get("API_KEY"))
+	}
 	w.Header().Set(CONTENTTYPE, APPLICATIONJSON)
 	// use this for cors
 	w.Header().Set("Access-Control-Allow-Origin", "*")

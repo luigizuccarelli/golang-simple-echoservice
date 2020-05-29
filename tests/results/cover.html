@@ -54,7 +54,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/handlers/handler.go (94.3%)</option>
+				<option value="file0">gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/handlers/handler.go (92.1%)</option>
 				
 				<option value="file1">gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/validator/validate.go (100.0%)</option>
 				
@@ -87,6 +87,7 @@ import (
 const (
         CONTENTTYPE     string = "Content-Type"
         APPLICATIONJSON string = "application/json"
+        FORBIDDEN       string = "Forbidden"
 )
 
 type Claims struct {
@@ -101,7 +102,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
 
         if token == "" </span><span class="cov8" title="1">{
                 w.WriteHeader(http.StatusForbidden)
-                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: schema.SchemaInterface{}}
+                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: FORBIDDEN, Payload: schema.SchemaInterface{}}
         }</span> else<span class="cov8" title="1"> {
 
                 // Remove Bearer
@@ -128,7 +129,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
                 <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
                         if err.Error() == jwt.ErrSignatureInvalid.Error() </span><span class="cov8" title="1">{
                                 w.WriteHeader(http.StatusForbidden)
-                                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: schema.SchemaInterface{}}
+                                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: FORBIDDEN, Payload: schema.SchemaInterface{}}
                         }</span> else<span class="cov8" title="1"> {
                                 w.WriteHeader(http.StatusBadRequest)
                                 response = &amp;schema.Response{Code: 400, StatusCode: "400", Status: "ERROR", Message: "Bad Request", Payload: schema.SchemaInterface{}}
@@ -136,9 +137,9 @@ func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
                 } else<span class="cov8" title="1"> {
                         if !tkn.Valid </span><span class="cov0" title="0">{
                                 w.WriteHeader(http.StatusForbidden)
-                                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: "Forbidden", Payload: schema.SchemaInterface{}}
+                                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: FORBIDDEN, Payload: schema.SchemaInterface{}}
                         }</span> else<span class="cov8" title="1"> {
-                                response = &amp;schema.Response{Code: 200, StatusCode: "200", Status: "OK", Message: "Data uploaded succesfully", Payload: schema.SchemaInterface{}}
+                                response = &amp;schema.Response{Code: 200, StatusCode: "200", Status: "OK", Message: "Access granted", Payload: schema.SchemaInterface{}}
                                 w.WriteHeader(http.StatusOK)
                         }</span>
                 }
@@ -149,18 +150,22 @@ func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
 }
 
 func IsAlive(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        addHeaders(w, r)
         fmt.Fprintf(w, "{ \"version\" : \""+os.Getenv("VERSION")+"\" , \"name\": \"AuthInterface\" }")
         return
 }</span>
 
 // headers (with cors) utility
 func addHeaders(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
-        w.Header().Set(CONTENTTYPE, APPLICATIONJSON)
+        if r.Header.Get("API-KEY") != "" </span><span class="cov0" title="0">{
+                w.Header().Set("API_KEY_PT", r.Header.Get("API_KEY"))
+        }</span>
+        <span class="cov8" title="1">w.Header().Set(CONTENTTYPE, APPLICATIONJSON)
         // use this for cors
         w.Header().Set("Access-Control-Allow-Origin", "*")
         w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-        w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-}</span>
+        w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")</span>
+}
 </pre>
 		
 		<pre class="file" id="file1" style="display: none">package validator

@@ -60,13 +60,7 @@ The process is as follows (assume repos's have been created and initial code has
 
 - You should get the following repsonse :
 
-- ```bash
-{
-	"code": 200,
-	"status": "OK",
-	"message": "Hello World !!!!"
-}
-```
+- ```{"code": 200,"status": "OK",	"message": "Hello World !!!!"}```
 
 
 ## Links

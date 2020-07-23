@@ -54,9 +54,9 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/handlers/handler.go (92.1%)</option>
+				<option value="file0">gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/golang-simple-oc4service/pkg/handlers/handler.go (94.4%)</option>
 				
-				<option value="file1">gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/validator/validate.go (100.0%)</option>
+				<option value="file1">gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/golang-simple-oc4service/pkg/validator/validate.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -73,85 +73,58 @@
 		<pre class="file" id="file0" style="display: none">package handlers
 
 import (
+        "bytes"
         "encoding/json"
         "fmt"
+        "io/ioutil"
         "net/http"
         "os"
-        "strings"
 
-        "gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/connectors"
-        "gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/servisbot-authinterface/pkg/schema"
-        "github.com/dgrijalva/jwt-go"
+        "gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/golang-simple-oc4service/pkg/connectors"
+        "gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/golang-simple-oc4service/pkg/schema"
 )
 
 const (
         CONTENTTYPE     string = "Content-Type"
         APPLICATIONJSON string = "application/json"
-        FORBIDDEN       string = "Forbidden"
 )
 
-type Claims struct {
-        jwt.StandardClaims
-}
-
-func AuthHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients) <span class="cov8" title="1">{
+func EchoHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients) <span class="cov8" title="1">{
         var response *schema.Response
+        var req *schema.Request
 
-        token := r.Header.Get(strings.ToLower("Authorization"))
-        conn.Trace("Auth Header : %s", token)
+        // ensure we don't have nil - it will cause a null pointer exception
+        if r.Body == nil </span><span class="cov0" title="0">{
+                r.Body = ioutil.NopCloser(bytes.NewBufferString(""))
+        }</span>
+        <span class="cov8" title="1">body, err := ioutil.ReadAll(r.Body)
+        if err != nil </span><span class="cov8" title="1">{
+                msg := "EchoHandler body data error %v"
+                b := responseErrorFormat(http.StatusInternalServerError, w, msg, err)
+                fmt.Fprintf(w, string(b))
+                return
+        }</span>
 
-        if token == "" </span><span class="cov8" title="1">{
-                w.WriteHeader(http.StatusForbidden)
-                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: FORBIDDEN, Payload: schema.SchemaInterface{}}
-        }</span> else<span class="cov8" title="1"> {
+        <span class="cov8" title="1">conn.Trace("Request body : %s", string(body))
 
-                // Remove Bearer
-                tknStr := strings.Trim(token[7:], " ")
-                conn.Info(fmt.Sprintf("Token (trimmed) : %s", tknStr))
-                addHeaders(w, r)
-
-                // Initialize a new instance of `Claims`
-                claims := &amp;Claims{}
-
-                secret := os.Getenv("JWT_SECRETKEY")
-                conn.Trace(fmt.Sprintf("JWT SECRET : %s", secret))
-
-                var jwtKey = []byte(secret)
-
-                // Parse the JWT string and store the result in `claims`.
-                // Note that we are passing the key in this method as well. This method will return an error
-                // if the token is invalid (if it has expired according to the expiry time we set on sign in),
-                // or if the signature does not match
-                tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) </span><span class="cov8" title="1">{
-                        return jwtKey, nil
-                }</span>)
-
-                <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
-                        if err.Error() == jwt.ErrSignatureInvalid.Error() </span><span class="cov8" title="1">{
-                                w.WriteHeader(http.StatusForbidden)
-                                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: FORBIDDEN, Payload: schema.SchemaInterface{}}
-                        }</span> else<span class="cov8" title="1"> {
-                                w.WriteHeader(http.StatusBadRequest)
-                                response = &amp;schema.Response{Code: 400, StatusCode: "400", Status: "ERROR", Message: "Bad Request", Payload: schema.SchemaInterface{}}
-                        }</span>
-                } else<span class="cov8" title="1"> {
-                        if !tkn.Valid </span><span class="cov0" title="0">{
-                                w.WriteHeader(http.StatusForbidden)
-                                response = &amp;schema.Response{Code: 403, StatusCode: "403", Status: "ERROR", Message: FORBIDDEN, Payload: schema.SchemaInterface{}}
-                        }</span> else<span class="cov8" title="1"> {
-                                response = &amp;schema.Response{Code: 200, StatusCode: "200", Status: "OK", Message: "Access granted", Payload: schema.SchemaInterface{}}
-                                w.WriteHeader(http.StatusOK)
-                        }</span>
-                }
-        }
-        <span class="cov8" title="1">b, _ := json.MarshalIndent(response, "", "        ")
-        conn.Debug(fmt.Sprintf("AuthHandler response : %s", string(b)))
+        // unmarshal result from mw backend
+        errs := json.Unmarshal(body, &amp;req)
+        if errs != nil </span><span class="cov8" title="1">{
+                msg := "EchoHandler could not unmarshal input data from servisBOT to schema %v"
+                conn.Error(msg, errs)
+                b := responseErrorFormat(http.StatusInternalServerError, w, msg, errs)
+                fmt.Fprintf(w, string(b))
+                return
+        }</span>
+        <span class="cov8" title="1">response = &amp;schema.Response{Code: http.StatusOK, Status: "OK", Message: req.Message}
+        b, _ := json.MarshalIndent(response, "", "        ")
+        conn.Debug(fmt.Sprintf("EchoHandler response : %s", string(b)))
         fmt.Fprintf(w, string(b))</span>
 }
 
 func IsAlive(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
         addHeaders(w, r)
-        fmt.Fprintf(w, "{ \"version\" : \""+os.Getenv("VERSION")+"\" , \"name\": \"AuthInterface\" }")
+        fmt.Fprintf(w, "{ \"version\" : \""+os.Getenv("VERSION")+"\" , \"name\": \"golang-simple-oc4service\" }")
         return
 }</span>
 
@@ -166,6 +139,15 @@ func addHeaders(w http.ResponseWriter, r *http.Request) <span class="cov8" title
         w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
         w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")</span>
 }
+
+// responsErrorFormat - utility function
+func responseErrorFormat(code int, w http.ResponseWriter, msg string, val ...interface{}) []byte <span class="cov8" title="1">{
+        var b []byte
+        response := &amp;schema.Response{Code: code, Status: "ERROR", Message: fmt.Sprintf(msg, val...)}
+        w.WriteHeader(code)
+        b, _ = json.MarshalIndent(response, "", "        ")
+        return b
+}</span>
 </pre>
 		
 		<pre class="file" id="file1" style="display: none">package validator
@@ -202,7 +184,6 @@ func ValidateEnvars(logger *simple.Logger) error <span class="cov8" title="1">{
                 "LOG_LEVEL,false",
                 "NAME,false",
                 "SERVER_PORT,true",
-                "JWT_SECRETKEY,true",
                 "VERSION,true",
         }
         for x := range items </span><span class="cov8" title="1">{

@@ -2,15 +2,15 @@
   "format_version" : 1,
   "label_template": "${COUNT}",
   "enable_pipeline_locking": false,
-  "name": "servisbot-authinterface",
-  "group" : "ServisBOT",
+  "name": "golang-simple-oc4service",
+  "group" : "Dev",
   "tracking_tool": null,
   "timer": null,
   "environment_variables": [],
   "materials": [
     {
       "type": "git",
-      "url": "http://cicd:cicd01@gitea.cicd.svc.cluster.local:3000/cicd/servisbot-authinterface.git",
+      "url": "http://cicd:cicd01@gitea.cicd.svc.cluster.local:3000/cicd/golang-simple-oc4service.git",
       "destination": null,
       "filter": null,
       "name": "scm",

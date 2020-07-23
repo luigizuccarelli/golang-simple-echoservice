@@ -32,7 +32,6 @@ func ValidateEnvars(logger *simple.Logger) error {
 		"LOG_LEVEL,false",
 		"NAME,false",
 		"SERVER_PORT,true",
-		"JWT_SECRETKEY,true",
 		"VERSION,true",
 	}
 	for x := range items {

@@ -3,9 +3,9 @@
 # All parameter fields are required for the script to execute
 
 # declare some variables
-PROJECT="servisbot-authinterface"
-jobname="kaniko-servisbot-authinterface"
-deploymentconfig="servisbot-authinterface"
+PROJECT="golang-simple-oc4service"
+jobname="kaniko-golang-simple-oc4service"
+deploymentconfig="golang-simple-oc4service"
 namespace="trackmate-pilot"
 
 

@@ -1,6 +1,6 @@
 {
   "name": "dev",
   "pipelines": [
-    "servisbot-authinterface"
+    "golang-simple-oc4service"
   ]
 }

@@ -2,7 +2,6 @@ package connectors
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/microlib/simple"
 )
@@ -31,10 +30,4 @@ func (c *MockConnectors) Trace(msg string, val ...interface{}) {
 func NewTestConnectors(logger *simple.Logger) Clients {
 	conns := &MockConnectors{Logger: logger}
 	return conns
-}
-
-func assertEqual(t *testing.T, a interface{}, b interface{}) {
-	if a != b {
-		t.Fatalf("%s != %s", a, b)
-	}
 }

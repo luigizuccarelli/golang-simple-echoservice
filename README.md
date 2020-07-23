@@ -62,6 +62,8 @@ The process is as follows (assume repos's have been created and initial code has
 
 - ```{"code": 200,"status": "OK",	"message": "Hello World !!!!"}```
 
+- Endpoint for **OpenAPI 3.0** (swagger docs) - ```http://127.0.0.1:9000/api/v1/api-docs/``` (trailing slash is important)
+
 
 ## Links
 Gitea     - https://gitea-cicd.apps.aws2-dev.ocp.14west.io/

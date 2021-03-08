@@ -1,8 +1,9 @@
-module gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/golang-simple-oc4service
+module lmzsoftware.com/lzuccarelli/golang-simple-echoservice
 
-go 1.14
+go 1.15
 
 require (
-	github.com/gorilla/mux v1.7.4
-	github.com/microlib/simple v0.0.0-20170927110707-4b906e1855fd
+	github.com/gorilla/mux v1.8.0
+	github.com/microlib/simple v1.0.1
+	github.com/prometheus/client_golang v1.9.0
 )

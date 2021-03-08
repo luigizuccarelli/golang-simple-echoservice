@@ -17,7 +17,7 @@ clean:
 	go clean ./...
 
 container:
-	podman build -t  tfld-docker-prd-local.repo.14west.io/golang-simple-oc4service:1.14.2 .
+	podman build -t  quay.io/luigizuccarelli/golang-simple-echoservice:1.16.3 .
 
 push:
-	podman push tfld-docker-prd-local.repo.14west.io/golang-simple-oc4service:1.14.2 
+	podman push --authfile=/home/lzuccarelli/config.json quay.io/luigizuccarelli/golang-simple-echoservice:1.16.3 

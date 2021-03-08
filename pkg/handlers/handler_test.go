@@ -9,8 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"gitea-cicd.apps.aws2-dev.ocp.14west.io/cicd/golang-simple-oc4service/pkg/connectors"
 	"github.com/microlib/simple"
+	"lmzsoftware.com/lzuccarelli/golang-simple-echoservice/pkg/connectors"
 )
 
 type errReader int

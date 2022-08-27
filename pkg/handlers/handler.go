@@ -60,7 +60,6 @@ func EchoHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
 func IsAlive(w http.ResponseWriter, r *http.Request) {
 	addHeaders(w, r)
 	fmt.Fprintf(w, "{ \"version\" : \""+os.Getenv("VERSION")+"\" , \"name\": \""+os.Getenv("NAME")+"\" }")
-	return
 }
 
 // headers (with cors) utility

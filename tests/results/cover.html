@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">lmzsoftware.com/lzuccarelli/golang-simple-echoservice/pkg/handlers/handler.go (81.6%)</option>
+				<option value="file0">lmzsoftware.com/lzuccarelli/golang-simple-echoservice/pkg/handlers/handler.go (81.1%)</option>
 				
 				<option value="file1">lmzsoftware.com/lzuccarelli/golang-simple-echoservice/pkg/validator/validate.go (100.0%)</option>
 				
@@ -133,7 +133,6 @@ func EchoHandler(w http.ResponseWriter, r *http.Request, conn connectors.Clients
 func IsAlive(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
         addHeaders(w, r)
         fmt.Fprintf(w, "{ \"version\" : \""+os.Getenv("VERSION")+"\" , \"name\": \""+os.Getenv("NAME")+"\" }")
-        return
 }</span>
 
 // headers (with cors) utility
@@ -171,7 +170,7 @@ import (
 func checkEnvar(item string, logger *simple.Logger) error <span class="cov8" title="1">{
         name := strings.Split(item, ",")[0]
         required, _ := strconv.ParseBool(strings.Split(item, ",")[1])
-        logger.Trace(fmt.Sprintf("Input paramaters -&gt; name %s : required %t", name, required))
+        logger.Trace(fmt.Sprintf("Input parameters -&gt; name %s : required %t", name, required))
         if os.Getenv(name) == "" </span><span class="cov8" title="1">{
                 if required </span><span class="cov8" title="1">{
                         logger.Error(fmt.Sprintf("%s envar is mandatory please set it", name))

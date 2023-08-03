@@ -56,7 +56,7 @@ func startHttpServer(con connectors.Clients) *http.Server {
 		handlers.EchoHandler(w, req, con)
 	}).Methods("POST", "OPTIONS")
 
-	r.HandleFunc("/api/v1/sys/info/isalive", handlers.IsAlive).Methods("GET")
+	r.HandleFunc("/api/v1/isalive", handlers.IsAlive).Methods("GET")
 
 	http.Handle("/", r)
 

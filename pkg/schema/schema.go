@@ -1,7 +1,7 @@
 package schema
 
 type Request struct {
-	Id      string `json:"id,omitemptye"`
+	Id      string `json:"id,omitempty"`
 	Message string `json:"message"`
 }
 

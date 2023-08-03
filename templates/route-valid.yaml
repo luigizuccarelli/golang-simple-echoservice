@@ -1,0 +1,24 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    openshift.io/host.generated: "true"
+    route.openshift.io/allow-non-dns-compliant-host: "true"
+  labels:
+    app: golang-simple-echoservice
+    app.kubernetes.io/component: golang-simple-echoservice
+    app.kubernetes.io/instance: golang-simple-echoservice
+    name: golang-simple-echoservice
+  name: name-namespace-1234567890-1234567890-1234567890-1234567
+  namespace: poc-demo
+spec:
+  port:
+    targetPort: golang-simple-echoservice
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: golang-simple-echoservice
+    weight: 100
+  wildcardPolicy: None
